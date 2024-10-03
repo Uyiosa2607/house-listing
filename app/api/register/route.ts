@@ -30,7 +30,10 @@ export async function POST(request: NextRequest) {
 
     if (error) return NextResponse.json({ message: "Something went wrong" });
 
-    return NextResponse.json({ data }, { status: 201 });
+    return NextResponse.json(
+      { message: "user created Successfully", data },
+      { status: 201 }
+    );
   } catch (error) {
     console.log(error);
     return NextResponse.json(
