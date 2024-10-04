@@ -1,101 +1,149 @@
-import Image from "next/image";
+/* eslint-disable @next/next/no-img-element */
+"use client";
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Bed, Bath, DollarSign, Search } from "lucide-react";
+import Link from "next/link";
+
+type Listing = {
+  id: string;
+  title: string;
+  price: number;
+  bedrooms: number;
+  bathrooms: number;
+  description: string;
+  image: string;
+  realtor: {
+    id: string;
+    name: string;
+  };
+};
+
+const mockListings: Listing[] = [
+  {
+    id: "1",
+    title: "Modern Apartment in Downtown",
+    price: 2000,
+    bedrooms: 2,
+    bathrooms: 2,
+    description: "A beautiful modern apartment in the heart of downtown.",
+    image: "/placeholder.svg",
+    realtor: { id: "1", name: "John Doe" },
+  },
+  {
+    id: "2",
+    title: "Cozy Suburban House",
+    price: 1500,
+    bedrooms: 3,
+    bathrooms: 2,
+    description: "A cozy house in a quiet suburban neighborhood.",
+    image: "/placeholder.svg",
+    realtor: { id: "2", name: "Jane Smith" },
+  },
+  // Add more mock listings as needed
+];
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [searchTerm, setSearchTerm] = useState("");
+  const [priceFilter, setPriceFilter] = useState<string>("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const filteredListings = mockListings.filter(
+    (listing) =>
+      listing.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (priceFilter === "" || listing.price <= parseInt(priceFilter))
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-4">
+      <div className="max-w-6xl mx-auto space-y-8">
+        <h1 className="text-4xl font-bold text-center">Available Listings</h1>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-grow">
+            <Search className="absolute left-2 top-3 h-4 w-4 text-gray-500" />
+            <Input
+              type="text"
+              placeholder="Search listings..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          </div>
+          <Select value={priceFilter} onValueChange={setPriceFilter}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Price range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="any">Any price</SelectItem>
+              <SelectItem value="1000">Up to $1000</SelectItem>
+              <SelectItem value="2000">Up to $2000</SelectItem>
+              <SelectItem value="3000">Up to $3000</SelectItem>
+              <SelectItem value="4000">Up to $4000</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredListings.map((listing) => (
+            <Card key={listing.id} className="flex flex-col">
+              <img
+                src={listing.image}
+                alt={listing.title}
+                className="h-48 w-full object-cover"
+              />
+              <CardHeader>
+                <CardTitle>{listing.title}</CardTitle>
+                <CardDescription>
+                  <Link
+                    href={`/realtor/${listing.realtor.id}`}
+                    className="text-blue-500 hover:underline"
+                  >
+                    {listing.realtor.name}
+                  </Link>
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500 line-clamp-2">
+                  {listing.description}
+                </p>
+                <div className="flex justify-between items-center mt-4">
+                  <div className="flex items-center">
+                    <Bed className="h-4 w-4 mr-1" />
+                    <span className="text-sm">{listing.bedrooms}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Bath className="h-4 w-4 mr-1" />
+                    <span className="text-sm">{listing.bathrooms}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <DollarSign className="h-4 w-4 mr-1" />
+                    <span className="text-sm font-bold">
+                      {listing.price}/mo
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="mt-auto">
+                <Button className="w-full">View Details</Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
