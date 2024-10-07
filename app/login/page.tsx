@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,28 +9,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { handleLogin } from "./action";
 import { Home, Mail } from "lucide-react";
 
-export default function LoginPageComponent() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-
-  const handleEmailLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      setError("Please fill in all fields");
-      return;
-    }
-    // Here you would typically handle the login logic
-    console.log("Logging in with:", email, password);
-  };
-
-  const handleGoogleLogin = () => {
-    // Here you would typically handle Google login logic
-    console.log("Logging in with Google");
-  };
-
+export default function Login() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -49,30 +28,23 @@ export default function LoginPageComponent() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <form onSubmit={handleEmailLogin} className="space-y-4">
+          <form className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
+                name="email"
                 placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <Input id="password" type="password" name="password" required />
             </div>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            <Button type="submit" className="w-full">
+            {/* {error && <p className="text-red-500 text-sm">{error}</p>} */}
+            <Button formAction={handleLogin} className="w-full">
               Login
             </Button>
           </form>
@@ -89,7 +61,7 @@ export default function LoginPageComponent() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={handleGoogleLogin}
+            // onClick={handleGoogleLogin}
           >
             <Mail className="mr-2 h-4 w-4" />
             Google
