@@ -97,8 +97,11 @@ export default function UserDashboard() {
 
   async function handleAddListing(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     const supabase = createClient();
+
     const formData = new FormData(event.currentTarget);
+
     const title = formData.get("title");
     const status = formData.get("title");
     const bathrooms = formData.get("bathrooms");
@@ -106,20 +109,22 @@ export default function UserDashboard() {
     const price = formData.get("price");
     const description = formData.get("description");
 
-    try {
-      const { error, data } = await supabase.from("houses").insert([
-        {
-          title,
-          status,
-          bedrooms,
-          bathrooms,
-          price,
-          description,
-        },
-      ]);
-    } catch (error) {
-      console.log(error);
-    }
+    // try {
+    //   const { error, data } = await supabase.from("houses").insert([
+    //     {
+    //       title,
+    //       status,
+    //       bedrooms,
+    //       bathrooms,
+    //       price,
+    //       description,
+    //     },
+    //   ]);
+    // } catch (error) {
+    //   console.log(error);
+    // }
+
+    console.log(title, status, bedrooms, bathrooms, price, description);
   }
 
   const handleEditListing = (updatedListing: Listing) => {
@@ -479,24 +484,7 @@ export default function UserDashboard() {
                 <DialogHeader>
                   <DialogTitle>Add New Listing</DialogTitle>
                 </DialogHeader>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const formData = new FormData(e.currentTarget);
-                    handleAddListing({
-                      title: formData.get("title") as string,
-                      status: formData.get("status") as
-                        | "available"
-                        | "rented"
-                        | "sold",
-                      price: Number(formData.get("price")),
-                      description: formData.get("description") as string,
-                      bedrooms: Number(formData.get("bedrooms")),
-                      bathrooms: Number(formData.get("bathrooms")),
-                      images: newListingImages,
-                    });
-                  }}
-                >
+                <form onSubmit={handleAddListing}>
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="new-title">Title</Label>
