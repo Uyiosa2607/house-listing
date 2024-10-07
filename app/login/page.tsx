@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
+import { useStore } from "@/utils/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,22 +15,42 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Home, Mail } from "lucide-react";
+import { Home, Mail, Loader2 } from "lucide-react";
 
-export default function LoginPageComponent() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+export default function Login() {
+  const { fetchUser } = useStore();
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleEmailLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      setError("Please fill in all fields");
-      return;
+  const router = useRouter();
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const supabase = createClient();
+
+    setLoading(true);
+
+    const formData = new FormData(event.currentTarget);
+
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) return console.log("unable to login :", error);
+      return router.push("/dashboard");
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
     }
-    // Here you would typically handle the login logic
-    console.log("Logging in with:", email, password);
-  };
+  }
 
   const handleGoogleLogin = () => {
     // Here you would typically handle Google login logic
@@ -49,15 +72,16 @@ export default function LoginPageComponent() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <form onSubmit={handleEmailLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                // value={email}
+                name="email"
+                // onChange={(event) => setEmail(event.target.value)}
                 required
               />
             </div>
@@ -66,14 +90,16 @@ export default function LoginPageComponent() {
               <Input
                 id="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                // value={password}
+                name="password"
+                // onChange={(event) => setPassword(event.target.value)}
                 required
               />
             </div>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {/* {error && <p className="text-red-500 text-sm">{error}</p>} */}
             <Button type="submit" className="w-full">
-              Login
+              Login{" "}
+              {loading && <Loader2 className="mr-1 w-4 h-5 animate-spin" />}
             </Button>
           </form>
           <div className="relative">

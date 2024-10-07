@@ -1,5 +1,7 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useStore } from "@/utils/store";
+import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,16 +49,10 @@ type User = {
   name: string;
   email: string;
   phone: string;
-  avatar: string;
+  id: string;
 };
 
 export default function UserDashboard() {
-  const [user, setUser] = useState<User>({
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "1234567890",
-    avatar: "/placeholder.svg",
-  });
   const [listings, setListings] = useState<Listing[]>([
     {
       id: "1",
@@ -67,10 +63,10 @@ export default function UserDashboard() {
       bedrooms: 2,
       bathrooms: 2,
       images: [
-        "/placeholder.svg?height=100&width=100",
-        "/placeholder.svg?height=100&width=100",
-        "/placeholder.svg?height=100&width=100",
-        "/placeholder.svg?height=100&width=100",
+        "/placeholder.svg",
+        "/placeholder.svg",
+        "/placeholder.svg",
+        "/placeholder.svg",
       ],
     },
     {
@@ -81,25 +77,50 @@ export default function UserDashboard() {
       description: "A cozy house in a quiet suburban neighborhood.",
       bedrooms: 3,
       bathrooms: 2,
-      images: [
-        "/placeholder.svg?height=100&width=100",
-        "/placeholder.svg?height=100&width=100",
-      ],
+      images: ["/placeholder.svg", "/placeholder.svg"],
     },
   ]);
+
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const [newListingImages, setNewListingImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { fetchUser, userInfo } = useStore();
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
 
   const handleProfileUpdate = (updatedUser: User) => {
     setUser(updatedUser);
   };
 
-  const handleAddListing = (newListing: Omit<Listing, "id">) => {
-    const id = Date.now().toString();
-    setListings([...listings, { ...newListing, id, images: newListingImages }]);
-    setNewListingImages([]);
-  };
+  async function handleAddListing(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const supabase = createClient();
+    const formData = new FormData(event.currentTarget);
+    const title = formData.get("title");
+    const status = formData.get("title");
+    const bathrooms = formData.get("bathrooms");
+    const bedrooms = formData.get("bedrooms");
+    const price = formData.get("price");
+    const description = formData.get("description");
+
+    try {
+      const { error, data } = await supabase.from("houses").insert([
+        {
+          title,
+          status,
+          bedrooms,
+          bathrooms,
+          price,
+          description,
+        },
+      ]);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   const handleEditListing = (updatedListing: Listing) => {
     setListings(
@@ -146,18 +167,18 @@ export default function UserDashboard() {
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-4">
               <Avatar className="w-20 h-20">
-                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarImage src="/placeholder.svg" alt={userInfo?.name} />
                 <AvatarFallback>
-                  {user.name
+                  {userInfo?.name
                     .split(" ")
                     .map((n) => n[0])
                     .join("")}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h2 className="text-xl font-semibold">{user.name}</h2>
-                <p className="text-sm text-gray-500">{user.email}</p>
-                <p className="text-sm text-gray-500">{user.phone}</p>
+                <h2 className="text-xl font-semibold">{userInfo?.name}</h2>
+                <p className="text-sm text-gray-500">{userInfo?.email}</p>
+                {/* <p className="text-sm text-gray-500">{user.phone}</p> */}
               </div>
             </div>
             <Dialog>
@@ -172,16 +193,16 @@ export default function UserDashboard() {
                   </DialogDescription>
                 </DialogHeader>
                 <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const formData = new FormData(e.currentTarget);
-                    handleProfileUpdate({
-                      name: formData.get("name") as string,
-                      email: formData.get("email") as string,
-                      phone: formData.get("phone") as string,
-                      avatar: user.avatar,
-                    });
-                  }}
+                // onSubmit={(e) => {
+                //   e.preventDefault();
+                //   const formData = new FormData(e.currentTarget);
+                //   handleProfileUpdate({
+                //     name: formData.get("name") as string,
+                //     email: formData.get("email") as string,
+                //     phone: formData.get("phone") as string,
+                //     // avatar: userInfo.avatar,
+                //   });
+                // }}
                 >
                   <div className="space-y-4">
                     <div className="space-y-2">
@@ -189,7 +210,7 @@ export default function UserDashboard() {
                       <Input
                         id="name"
                         name="name"
-                        defaultValue={user.name}
+                        defaultValue={userInfo?.name}
                         required
                       />
                     </div>
@@ -199,7 +220,7 @@ export default function UserDashboard() {
                         id="email"
                         name="email"
                         type="email"
-                        defaultValue={user.email}
+                        defaultValue={userInfo?.email}
                         required
                       />
                     </div>
@@ -209,7 +230,7 @@ export default function UserDashboard() {
                         id="phone"
                         name="phone"
                         type="tel"
-                        defaultValue={user.phone}
+                        // defaultValue={user.phone}
                         required
                       />
                     </div>
@@ -220,14 +241,14 @@ export default function UserDashboard() {
                         name="avatar"
                         type="file"
                         accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            handleImageUpload([file], ([url]) =>
-                              setUser({ ...user, avatar: url })
-                            );
-                          }
-                        }}
+                        // onChange={(e) => {
+                        //   const file = e.target.files?.[0];
+                        //   if (file) {
+                        //     handleImageUpload([file], ([url]) =>
+                        //       setUser({ ...user, avatar: url })
+                        //     );
+                        //   }
+                        // }}
                       />
                     </div>
                   </div>
