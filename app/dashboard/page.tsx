@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useStore } from "@/utils/store";
 import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
@@ -45,13 +45,6 @@ type Listing = {
   images: string[];
 };
 
-type User = {
-  name: string;
-  email: string;
-  phone: string;
-  id: string;
-};
-
 export default function UserDashboard() {
   const [listings, setListings] = useState<Listing[]>([
     {
@@ -83,7 +76,9 @@ export default function UserDashboard() {
 
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const [newListingImages, setNewListingImages] = useState<string[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [status, setStatus] = useState<string>("available");
+  const [pickedImages, setPickedImages] = useState<File[]>([]);
+  const [images, setImages] = useState<string[]>([]);
 
   const { fetchUser, userInfo } = useStore();
 
@@ -91,9 +86,38 @@ export default function UserDashboard() {
     fetchUser();
   }, [fetchUser]);
 
-  const handleProfileUpdate = (updatedUser: User) => {
-    setUser(updatedUser);
+  const handleImages = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const imageFiles = event.target.files;
+
+    if (imageFiles) {
+      const filesArray = Array.from(imageFiles);
+      setPickedImages([...pickedImages, ...filesArray]);
+    }
+
+    console.log(pickedImages);
   };
+
+  // async function uploadImagesToSupabase(imageFiles:) {
+  //   const supabase = createClient();
+
+  //   // Loop through each image file and upload it to Supabase Storage
+  //   for (let i = 0; i < imageFiles.length; i++) {
+  //     const file = imageFiles[i];
+  //     const { data, error } = await supabase.storage
+  //       .from("images") // Replace 'images' with your Supabase bucket name
+  //       .upload(`public/${file.name}`, file);
+
+  //     if (error) {
+  //       console.error("Error uploading image:", error);
+  //       continue;
+  //     }
+
+  //     if (data) {
+  //       // Directly update the images state with the uploaded image path
+  //       setImages((prevImages) => [...prevImages, data.path]);
+  //     }
+  //   }
+  // }
 
   async function handleAddListing(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -103,26 +127,32 @@ export default function UserDashboard() {
     const formData = new FormData(event.currentTarget);
 
     const title = formData.get("title");
-    const status = formData.get("title");
     const bathrooms = formData.get("bathrooms");
     const bedrooms = formData.get("bedrooms");
     const price = formData.get("price");
     const description = formData.get("description");
 
-    // try {
-    //   const { error, data } = await supabase.from("houses").insert([
-    //     {
-    //       title,
-    //       status,
-    //       bedrooms,
-    //       bathrooms,
-    //       price,
-    //       description,
-    //     },
-    //   ]);
-    // } catch (error) {
-    //   console.log(error);
-    // }
+    try {
+      const { error, data } = await supabase
+        .from("houses")
+        .insert([
+          {
+            title,
+            status,
+            bedrooms,
+            bathrooms,
+            price,
+            description,
+          },
+        ])
+        .select();
+
+      if (error)
+        return console.log("There was a problem saving items to database");
+      return console.log("Data:", data);
+    } catch (error) {
+      console.log(error);
+    }
 
     console.log(title, status, bedrooms, bathrooms, price, description);
   }
@@ -197,18 +227,7 @@ export default function UserDashboard() {
                     Make changes to your profile here.
                   </DialogDescription>
                 </DialogHeader>
-                <form
-                // onSubmit={(e) => {
-                //   e.preventDefault();
-                //   const formData = new FormData(e.currentTarget);
-                //   handleProfileUpdate({
-                //     name: formData.get("name") as string,
-                //     email: formData.get("email") as string,
-                //     phone: formData.get("phone") as string,
-                //     // avatar: userInfo.avatar,
-                //   });
-                // }}
-                >
+                <form>
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Name</Label>
@@ -240,20 +259,13 @@ export default function UserDashboard() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="avatar">Profile Picture</Label>
+                      {/* <Label  htmlFor="avatar">Profile Picture</Label> */}
                       <Input
                         id="avatar"
                         name="avatar"
                         type="file"
                         accept="image/*"
-                        // onChange={(e) => {
-                        //   const file = e.target.files?.[0];
-                        //   if (file) {
-                        //     handleImageUpload([file], ([url]) =>
-                        //       setUser({ ...user, avatar: url })
-                        //     );
-                        //   }
-                        // }}
+                        onChange={handleImages}
                       />
                     </div>
                   </div>
@@ -492,7 +504,10 @@ export default function UserDashboard() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="new-status">Status</Label>
-                      <Select name="status">
+                      <Select
+                        onValueChange={(value) => setStatus(value)}
+                        name="status"
+                      >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>
@@ -548,27 +563,9 @@ export default function UserDashboard() {
                         type="file"
                         accept="image/*"
                         multiple
-                        ref={fileInputRef}
-                        className="hidden"
-                        onChange={(e) => {
-                          const files = e.target.files;
-                          if (files && files.length > 0) {
-                            handleImageUpload(files, (urls) => {
-                              setNewListingImages((prevImages) =>
-                                [...prevImages, ...urls].slice(0, 4)
-                              );
-                            });
-                          }
-                        }}
+                        // className="hidden"
+                        onChange={handleImages}
                       />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <Upload className="w-4 h-4 mr-2" /> Upload Images
-                      </Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {newListingImages.map((image, index) => (
