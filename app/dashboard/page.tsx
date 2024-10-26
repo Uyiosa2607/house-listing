@@ -1,8 +1,10 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { useStore } from "@/utils/store";
 import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
+import imageCompression from "browser-image-compression";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,7 +47,97 @@ type Listing = {
   images: string[];
 };
 
+function ImagePreview({
+  images,
+  onRemove,
+  maxImages = 4,
+}: {
+  images: File[];
+  onRemove: (index: number) => void;
+  maxImages?: number;
+}) {
+  const [previews, setPreviews] = useState<string[]>([]);
+
+  useEffect(() => {
+    const newPreviews = images
+      .slice(0, maxImages)
+      .map((file) => URL.createObjectURL(file));
+    setPreviews(newPreviews);
+
+    return () => {
+      newPreviews.forEach(URL.revokeObjectURL);
+    };
+  }, [images, maxImages]);
+
+  return (
+    <div className="flex flex-wrap gap-2 mt-2">
+      {previews.map((preview, index) => (
+        <div key={preview} className="relative w-24 h-24">
+          <Image
+            src={preview}
+            alt={`Preview ${index + 1}`}
+            layout="fill"
+            objectFit="cover"
+            className="rounded-md"
+          />
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            className="absolute top-0 right-0 h-6 w-6"
+            onClick={() => onRemove(index)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StyledImagePicker({
+  onChange,
+  multiple = true,
+  accept = "image/*",
+}: {
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  multiple?: boolean;
+  accept?: string;
+}) {
+  return (
+    <div className="flex items-center justify-center w-full">
+      <label
+        htmlFor="dropzone-file"
+        className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600"
+      >
+        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+          <Upload className="w-10 h-10 mb-3 text-gray-400" />
+          <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+            <span className="font-semibold">Click to upload</span> or drag and
+            drop
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            SVG, PNG, JPG or GIF (MAX. 800x400px)
+          </p>
+        </div>
+        <input
+          id="dropzone-file"
+          type="file"
+          className="hidden"
+          onChange={onChange}
+          multiple={multiple}
+          accept={accept}
+        />
+      </label>
+    </div>
+  );
+}
+
 export default function UserDashboard() {
+  const [status, setStatus] = useState<string>("available");
+  const [pickedImages, setPickedImages] = useState<File[]>([]);
+  const [editingListing, setEditingListing] = useState<Listing | null>(null);
+  const [newListingImages, setNewListingImages] = useState<File[]>([]);
   const [listings, setListings] = useState<Listing[]>([
     {
       id: "1",
@@ -56,10 +148,10 @@ export default function UserDashboard() {
       bedrooms: 2,
       bathrooms: 2,
       images: [
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg",
+        "/placeholder.svg?height=100&width=100",
+        "/placeholder.svg?height=100&width=100",
+        "/placeholder.svg?height=100&width=100",
+        "/placeholder.svg?height=100&width=100",
       ],
     },
     {
@@ -70,15 +162,12 @@ export default function UserDashboard() {
       description: "A cozy house in a quiet suburban neighborhood.",
       bedrooms: 3,
       bathrooms: 2,
-      images: ["/placeholder.svg", "/placeholder.svg"],
+      images: [
+        "/placeholder.svg?height=100&width=100",
+        "/placeholder.svg?height=100&width=100",
+      ],
     },
   ]);
-
-  const [editingListing, setEditingListing] = useState<Listing | null>(null);
-  const [newListingImages, setNewListingImages] = useState<string[]>([]);
-  const [status, setStatus] = useState<string>("available");
-  const [pickedImages, setPickedImages] = useState<File[]>([]);
-  const [images, setImages] = useState<string[]>([]);
 
   const { fetchUser, userInfo } = useStore();
 
@@ -88,73 +177,108 @@ export default function UserDashboard() {
 
   const handleImages = (event: React.ChangeEvent<HTMLInputElement>) => {
     const imageFiles = event.target.files;
-
     if (imageFiles) {
       const filesArray = Array.from(imageFiles);
-      setPickedImages([...pickedImages, ...filesArray]);
+      setPickedImages((prevImages) =>
+        [...prevImages, ...filesArray].slice(0, 4)
+      );
     }
-
-    console.log(pickedImages);
   };
 
-  // async function uploadImagesToSupabase(imageFiles:) {
-  //   const supabase = createClient();
+  const handleNewListingImages = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const imageFiles = event.target.files;
+    if (imageFiles) {
+      const filesArray = Array.from(imageFiles);
+      setNewListingImages((prevImages) =>
+        [...prevImages, ...filesArray].slice(0, 4)
+      );
+    }
+  };
 
-  //   // Loop through each image file and upload it to Supabase Storage
-  //   for (let i = 0; i < imageFiles.length; i++) {
-  //     const file = imageFiles[i];
-  //     const { data, error } = await supabase.storage
-  //       .from("images") // Replace 'images' with your Supabase bucket name
-  //       .upload(`public/${file.name}`, file);
+  async function uploadImagesToSupabase(
+    imageFiles: File[],
+    postId: string
+  ): Promise<void> {
+    const supabase = createClient();
 
-  //     if (error) {
-  //       console.error("Error uploading image:", error);
-  //       continue;
-  //     }
+    for (let file of imageFiles) {
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 800,
+        useWebWorker: true,
+      };
+      try {
+        const compressedFile = await imageCompression(file, options);
 
-  //     if (data) {
-  //       // Directly update the images state with the uploaded image path
-  //       setImages((prevImages) => [...prevImages, data.path]);
-  //     }
-  //   }
-  // }
+        const { data, error } = await supabase.storage
+          .from("storage")
+          .upload(`public/${compressedFile.name}`, compressedFile);
+
+        if (error) {
+          console.error("Error uploading image:", error.message);
+          continue;
+        }
+
+        const imageUrl = supabase.storage.from("images").getPublicUrl(data.path)
+          .data?.publicUrl;
+
+        if (imageUrl) {
+          const { error: insertError } = await supabase
+            .from("images")
+            .insert({ post_id: postId, image_url: imageUrl });
+
+          if (insertError) {
+            console.error(
+              "Error inserting image URL into database:",
+              insertError.message
+            );
+          }
+        } else {
+          console.error("Error: Image URL is undefined or empty.");
+        }
+      } catch (compressionError) {
+        console.error(
+          "Error compressing image:",
+          (compressionError as Error).message
+        );
+      }
+    }
+  }
 
   async function handleAddListing(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
     const supabase = createClient();
-
     const formData = new FormData(event.currentTarget);
-
-    const title = formData.get("title");
-    const bathrooms = formData.get("bathrooms");
-    const bedrooms = formData.get("bedrooms");
-    const price = formData.get("price");
-    const description = formData.get("description");
+    const title = formData.get("title") as string;
+    const bathrooms = Number(formData.get("bathrooms"));
+    const bedrooms = Number(formData.get("bedrooms"));
+    const price = Number(formData.get("price"));
+    const description = formData.get("description") as string;
 
     try {
-      const { error, data } = await supabase
+      const { data, error } = await supabase
         .from("houses")
-        .insert([
-          {
-            title,
-            status,
-            bedrooms,
-            bathrooms,
-            price,
-            description,
-          },
-        ])
-        .select();
+        .insert([{ title, status, bedrooms, bathrooms, price, description }])
+        .select("id");
 
-      if (error)
-        return console.log("There was a problem saving items to database");
-      return console.log("Data:", data);
+      if (error) {
+        console.log("Error saving item to the database:", error.message);
+        return;
+      }
+
+      if (data && Array.isArray(data) && data.length > 0) {
+        const postId = data[0].id;
+        await uploadImagesToSupabase(newListingImages, postId);
+        console.log("Listing added successfully with images uploaded.");
+        setNewListingImages([]);
+      } else {
+        console.log("No data returned from the insert operation.");
+      }
     } catch (error) {
-      console.log(error);
+      console.log("Unexpected error:", (error as Error).message);
     }
-
-    console.log(title, status, bedrooms, bathrooms, price, description);
   }
 
   const handleEditListing = (updatedListing: Listing) => {
@@ -168,27 +292,6 @@ export default function UserDashboard() {
 
   const handleDeleteListing = (id: string) => {
     setListings(listings.filter((listing) => listing.id !== id));
-  };
-
-  const handleImageUpload = (
-    files: FileList,
-    callback: (urls: string[]) => void
-  ) => {
-    // In a real application, you would upload the files to a server here
-    // For this example, we'll just create local URLs
-    const urls = Array.from(files).map((file) => URL.createObjectURL(file));
-    callback(urls);
-  };
-
-  const removeImage = (index: number, isNewListing: boolean) => {
-    if (isNewListing) {
-      setNewListingImages(newListingImages.filter((_, i) => i !== index));
-    } else if (editingListing) {
-      setEditingListing({
-        ...editingListing,
-        images: editingListing.images.filter((_, i) => i !== index),
-      });
-    }
   };
 
   return (
@@ -213,7 +316,6 @@ export default function UserDashboard() {
               <div>
                 <h2 className="text-xl font-semibold">{userInfo?.name}</h2>
                 <p className="text-sm text-gray-500">{userInfo?.email}</p>
-                {/* <p className="text-sm text-gray-500">{user.phone}</p> */}
               </div>
             </div>
             <Dialog>
@@ -250,16 +352,10 @@ export default function UserDashboard() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone</Label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        // defaultValue={user.phone}
-                        required
-                      />
+                      <Input id="phone" name="phone" type="tel" required />
                     </div>
                     <div className="space-y-2">
-                      {/* <Label  htmlFor="avatar">Profile Picture</Label> */}
+                      <Label htmlFor="avatar">Profile Picture</Label>
                       <Input
                         id="avatar"
                         name="avatar"
@@ -421,51 +517,15 @@ export default function UserDashboard() {
                               <Label htmlFor="images">
                                 Listing Images (Max 4)
                               </Label>
-                              <Input
-                                id="images"
-                                name="images"
-                                type="file"
-                                accept="image/*"
-                                multiple
-                                onChange={(e) => {
-                                  const files = e.target.files;
-                                  if (
-                                    files &&
-                                    files.length > 0 &&
-                                    editingListing
-                                  ) {
-                                    handleImageUpload(files, (urls) => {
-                                      setEditingListing({
-                                        ...editingListing,
-                                        images: [
-                                          ...editingListing.images,
-                                          ...urls,
-                                        ].slice(0, 4),
-                                      });
-                                    });
-                                  }
-                                }}
+                              <StyledImagePicker onChange={handleImages} />
+                              <ImagePreview
+                                images={pickedImages}
+                                onRemove={(index) =>
+                                  setPickedImages((images) =>
+                                    images.filter((_, i) => i !== index)
+                                  )
+                                }
                               />
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {editingListing?.images.map((image, index) => (
-                                <div key={index} className="relative w-24 h-24">
-                                  <Image
-                                    src={image}
-                                    alt={`Listing image ${index + 1}`}
-                                    layout="fill"
-                                    objectFit="cover"
-                                    className="rounded-md"
-                                  />
-                                  <button
-                                    type="button"
-                                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
-                                    onClick={() => removeImage(index, false)}
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              ))}
                             </div>
                           </div>
                           <DialogFooter className="mt-4">
@@ -557,35 +617,15 @@ export default function UserDashboard() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="new-images">Listing Images (Max 4)</Label>
-                      <Input
-                        id="new-images"
-                        name="images"
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        // className="hidden"
-                        onChange={handleImages}
+                      <StyledImagePicker onChange={handleNewListingImages} />
+                      <ImagePreview
+                        images={newListingImages}
+                        onRemove={(index) =>
+                          setNewListingImages((images) =>
+                            images.filter((_, i) => i !== index)
+                          )
+                        }
                       />
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {newListingImages.map((image, index) => (
-                        <div key={index} className="relative w-24 h-24">
-                          <Image
-                            src={image}
-                            alt={`New listing image ${index + 1}`}
-                            layout="fill"
-                            objectFit="cover"
-                            className="rounded-md"
-                          />
-                          <button
-                            type="button"
-                            className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
-                            onClick={() => removeImage(index, true)}
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
                     </div>
                   </div>
                   <DialogFooter className="mt-4">

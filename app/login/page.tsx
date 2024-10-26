@@ -1,9 +1,7 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
-import { useStore } from "@/utils/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,14 +16,9 @@ import {
 import { Home, Mail, Loader2 } from "lucide-react";
 
 export default function Login() {
-  const { fetchUser } = useStore();
   const [loading, setLoading] = useState<boolean>(false);
 
   const router = useRouter();
-
-  useEffect(() => {
-    fetchUser();
-  }, []);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
