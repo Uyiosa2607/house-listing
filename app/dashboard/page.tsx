@@ -72,7 +72,7 @@ function ImagePreview({
   return (
     <div className="flex flex-wrap gap-2 mt-2">
       {previews.map((preview, index) => (
-        <div key={preview} className="relative w-24 h-24">
+        <div key={preview} className="relative w-16 h-16">
           <Image
             src={preview}
             alt={`Preview ${index + 1}`}
@@ -108,17 +108,17 @@ function StyledImagePicker({
     <div className="flex items-center justify-center w-full">
       <label
         htmlFor="dropzone-file"
-        className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600"
+        className="flex flex-col items-center justify-center w-full h-20 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600"
       >
-        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-          <Upload className="w-10 h-10 mb-3 text-gray-400" />
+        <div className="flex flex-col items-center justify-center pt-4 pb-3">
+          <Upload className="w-6 h-6 mb-3 text-gray-400" />
           <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
             <span className="font-semibold">Click to upload</span> or drag and
             drop
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          {/* <p className="text-xs text-gray-500 dark:text-gray-400">
             SVG, PNG, JPG or GIF (MAX. 800x400px)
-          </p>
+          </p> */}
         </div>
         <input
           id="dropzone-file"
