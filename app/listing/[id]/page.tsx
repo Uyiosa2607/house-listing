@@ -35,6 +35,7 @@ interface Listing {
   squareFeet: number;
   description: string;
   img: string[];
+  author_id: string;
   address: string;
   realtor: {
     id: string;
@@ -43,6 +44,13 @@ interface Listing {
     email: string;
     img: string;
   };
+}
+
+interface Author {
+  name: string;
+  img: string;
+  phone: string;
+  email: string;
 }
 
 export default function ListingDetails({
@@ -57,7 +65,25 @@ export default function ListingDetails({
   const router = useRouter();
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [listing, setListing] = useState<Listing | null>(null); // Changed to null
+  const [listing, setListing] = useState<Listing | null>(null);
+  const [author, setAuthor] = useState<Author | null>(null);
+
+  async function getRealtor(id: string) {
+    const supabase = createClient();
+    try {
+      const { error, data } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", id);
+      if (!error) {
+        setAuthor(data[0]);
+        return;
+      }
+      return console.log("error fetching author:", error);
+    } catch (error) {
+      console.log("an error occured:", error);
+    }
+  }
 
   async function getListing(id: string) {
     const supabase = createClient();
@@ -67,9 +93,9 @@ export default function ListingDetails({
         .from("listing")
         .select("*")
         .eq("id", id);
-      if (!error && data.length > 0) {
+      if (!error) {
         setListing(data[0]);
-        console.log(data[0]);
+        getRealtor(data[0].author_id);
       }
     } catch (error) {
       console.log("An error occurred trying to fetch data:", error);
@@ -99,6 +125,8 @@ export default function ListingDetails({
   if (!listing) {
     return <div>Loading...</div>;
   }
+
+  console.log(listing);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-4">
@@ -156,13 +184,13 @@ export default function ListingDetails({
             </CardHeader>
             <CardDescription>Bathrooms</CardDescription>
           </Card>
-          <Card>
+          {/* <Card>
             <CardHeader className="flex flex-row items-center justify-center pb-2">
               <Home className="h-4 w-4 mr-2" />
               <CardTitle>{listing.squareFeet}</CardTitle>
             </CardHeader>
             <CardDescription>Sq Ft</CardDescription>
-          </Card>
+          </Card> */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-center pb-2">
               <DollarSign className="h-4 w-4 mr-2" />
@@ -173,9 +201,8 @@ export default function ListingDetails({
         </div>
 
         <Tabs defaultValue="description">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="description">Description</TabsTrigger>
-            <TabsTrigger value="features">Features</TabsTrigger>
             <TabsTrigger value="location">Location</TabsTrigger>
           </TabsList>
           <TabsContent value="description" className="mt-4">
@@ -185,20 +212,6 @@ export default function ListingDetails({
               </CardHeader>
               <CardContent>
                 <p>{listing.description}</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="features" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Property Features</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="list-disc pl-5 space-y-2">
-                  {/* {listing.features.map((feature, index) => (
-                    <li key={index}>{feature}</li>
-                  ))} */}
-                </ul>
               </CardContent>
             </Card>
           </TabsContent>
@@ -220,31 +233,29 @@ export default function ListingDetails({
             <CardTitle>Contact Realtor</CardTitle>
           </CardHeader>
           <CardContent className="flex items-center space-x-4">
-            {/* <img
-              src={listing.realtor.img}
-              alt={listing.realtor.name}
+            <img
+              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${author?.img}`}
+              alt={author?.name}
               className="w-16 h-16 rounded-full object-cover"
-            /> */}
+            />
             <div>
-              {/* <h3 className="font-semibold">{listing.realtor.name}</h3> */}
+              <h3 className="font-semibold">{author?.name}</h3>
               <div className="flex items-center mt-2">
                 <Phone className="h-4 w-4 mr-2" />
-                {/* <span>{listing.realtor.phone}</span> */}
+                {author?.phone}
               </div>
               <div className="flex items-center mt-1">
                 <Mail className="h-4 w-4 mr-2" />
-                {/* <span>{listing.realtor.email}</span> */}
+                <span>{author?.email}</span>
               </div>
             </div>
           </CardContent>
           <CardFooter>
-            {/* <Button
-              onClick={() =>
-                window.open(`mailto:${listing.realtor.email}`, "_blank")
-              }
+            <Button
+              onClick={() => window.open(`mailto:${author?.email}`, "_blank")}
             >
               Email Realtor
-            </Button> */}
+            </Button>
           </CardFooter>
         </Card>
       </div>
