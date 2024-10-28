@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -34,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Home, Plus, Pencil, Trash2, Upload, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, X, Loader2 } from "lucide-react";
 
 type Listing = {
   id: string;
@@ -44,7 +45,7 @@ type Listing = {
   description: string;
   bedrooms: number;
   bathrooms: number;
-  images: string[];
+  img: string[];
 };
 
 function ImagePreview({
@@ -138,41 +139,35 @@ export default function UserDashboard() {
   const [pickedImages, setPickedImages] = useState<File[]>([]);
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const [newListingImages, setNewListingImages] = useState<File[]>([]);
-  const [listings, setListings] = useState<Listing[]>([
-    {
-      id: "1",
-      title: "Modern Apartment in Downtown",
-      status: "available",
-      price: 2000,
-      description: "A beautiful modern apartment in the heart of downtown.",
-      bedrooms: 2,
-      bathrooms: 2,
-      images: [
-        "/placeholder.svg?height=100&width=100",
-        "/placeholder.svg?height=100&width=100",
-        "/placeholder.svg?height=100&width=100",
-        "/placeholder.svg?height=100&width=100",
-      ],
-    },
-    {
-      id: "2",
-      title: "Cozy Suburban House",
-      status: "rented",
-      price: 1500,
-      description: "A cozy house in a quiet suburban neighborhood.",
-      bedrooms: 3,
-      bathrooms: 2,
-      images: [
-        "/placeholder.svg?height=100&width=100",
-        "/placeholder.svg?height=100&width=100",
-      ],
-    },
-  ]);
+  const [listingLoading, setListingLoading] = useState<boolean>(false);
+  const [fetchLoading, setFecthLoading] = useState<boolean>(false);
+  const [listings, setListings] = useState<Listing[]>([]);
 
   const { fetchUser, userInfo } = useStore();
 
+  async function getListing() {
+    const supabase = createClient();
+    const id = (await supabase.auth.getUser()).data.user?.id;
+    try {
+      setFecthLoading(true);
+      const { error, data } = await supabase
+        .from("listing")
+        .select("*")
+        .eq("author_id", id)
+        .order("created_at", { ascending: false });
+      if (error) return console.log(error);
+      setListings(data);
+      console.log(data);
+    } catch (error) {
+      console.log("an error occured while trying to fecth data:", error);
+    } finally {
+      setFecthLoading(false);
+    }
+  }
+
   useEffect(() => {
     fetchUser();
+    getListing();
   }, [fetchUser]);
 
   const handleImages = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -197,46 +192,33 @@ export default function UserDashboard() {
     }
   };
 
-  async function uploadImagesToSupabase(
-    imageFiles: File[],
-    postId: string
-  ): Promise<void> {
+  async function uploadImagesToSupabase(imageFiles: File[]): Promise<string[]> {
     const supabase = createClient();
-
+    const imagePaths: string[] = [];
     for (let file of imageFiles) {
       const options = {
         maxSizeMB: 1,
         maxWidthOrHeight: 800,
         useWebWorker: true,
       };
+
       try {
         const compressedFile = await imageCompression(file, options);
 
         const { data, error } = await supabase.storage
           .from("storage")
-          .upload(`public/${compressedFile.name}`, compressedFile);
+          .upload(`images/${compressedFile.name}`, compressedFile, {
+            cacheControl: "3600",
+            upsert: true,
+          });
 
         if (error) {
           console.error("Error uploading image:", error.message);
           continue;
         }
 
-        const imageUrl = supabase.storage.from("images").getPublicUrl(data.path)
-          .data?.publicUrl;
-
-        if (imageUrl) {
-          const { error: insertError } = await supabase
-            .from("images")
-            .insert({ post_id: postId, image_url: imageUrl });
-
-          if (insertError) {
-            console.error(
-              "Error inserting image URL into database:",
-              insertError.message
-            );
-          }
-        } else {
-          console.error("Error: Image URL is undefined or empty.");
+        if (data?.path) {
+          imagePaths.push(data.path);
         }
       } catch (compressionError) {
         console.error(
@@ -245,6 +227,8 @@ export default function UserDashboard() {
         );
       }
     }
+
+    return imagePaths;
   }
 
   async function handleAddListing(event: React.FormEvent<HTMLFormElement>) {
@@ -258,26 +242,34 @@ export default function UserDashboard() {
     const description = formData.get("description") as string;
 
     try {
+      setListingLoading(true);
+      const uploadedImages = await uploadImagesToSupabase(newListingImages);
       const { data, error } = await supabase
-        .from("houses")
-        .insert([{ title, status, bedrooms, bathrooms, price, description }])
-        .select("id");
+        .from("listing")
+        .insert([
+          {
+            author_id: userInfo?.id,
+            title,
+            status,
+            bedrooms,
+            bathrooms,
+            price,
+            description,
+            img: uploadedImages,
+          },
+        ])
+        .select("*");
 
       if (error) {
         console.log("Error saving item to the database:", error.message);
         return;
       }
 
-      if (data && Array.isArray(data) && data.length > 0) {
-        const postId = data[0].id;
-        await uploadImagesToSupabase(newListingImages, postId);
-        console.log("Listing added successfully with images uploaded.");
-        setNewListingImages([]);
-      } else {
-        console.log("No data returned from the insert operation.");
-      }
+      console.log(data, "Listing added successfully");
     } catch (error) {
       console.log("Unexpected error:", (error as Error).message);
+    } finally {
+      setListingLoading(false);
     }
   }
 
@@ -374,268 +366,282 @@ export default function UserDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-bold">Your Listings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {listings.map((listing) => (
-                <Card key={listing.id}>
-                  <CardHeader>
-                    <CardTitle>{listing.title}</CardTitle>
-                    <CardDescription>
-                      {listing.status} - ${listing.price}/month
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {listing.images.map((image, index) => (
-                        <div key={index} className="relative w-24 h-24">
-                          <Image
-                            src={image}
-                            alt={`${listing.title} - Image ${index + 1}`}
-                            layout="fill"
-                            objectFit="cover"
-                            className="rounded-md"
+        {listings ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-bold">Your Listings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {listings.map((listing) => (
+                  <Card key={listing.id}>
+                    <CardHeader>
+                      <CardTitle>{listing.title}</CardTitle>
+                      <CardDescription>
+                        {listing.status} - ${listing.price}/month
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {listing.img.map((image, index) => (
+                          <div key={index} className="relative w-24 h-24">
+                            <img
+                              src={`${process.env
+                                .NEXT_PUBLIC_SUPABASE_URL!}/storage/v1/object/public/storage/${image}`}
+                              alt={`${listing.title} - Image ${index + 1}`}
+                              className="rounded-md w-[80px] h-[80px] md:h-[100px] md:w-[100px] object-cover"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <p>{listing.description}</p>
+                      <p className="mt-2">
+                        Bedrooms: {listing.bedrooms}, Bathrooms:{" "}
+                        {listing.bathrooms}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="flex justify-end space-x-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            onClick={() => setEditingListing(listing)}
+                          >
+                            <Pencil className="w-4 h-4 mr-2" /> Edit
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Edit Listing</DialogTitle>
+                          </DialogHeader>
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              const formData = new FormData(e.currentTarget);
+                              if (editingListing) {
+                                handleEditListing({
+                                  ...editingListing,
+                                  title: formData.get("title") as string,
+                                  status: formData.get("status") as
+                                    | "available"
+                                    | "rented"
+                                    | "sold",
+                                  price: Number(formData.get("price")),
+                                  description: formData.get(
+                                    "description"
+                                  ) as string,
+                                  bedrooms: Number(formData.get("bedrooms")),
+                                  bathrooms: Number(formData.get("bathrooms")),
+                                });
+                              }
+                            }}
+                          >
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="title">Title</Label>
+                                <Input
+                                  id="title"
+                                  name="title"
+                                  defaultValue={editingListing?.title}
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="status">Status</Label>
+                                <Select
+                                  name="status"
+                                  defaultValue={editingListing?.status}
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select status" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="available">
+                                      Available
+                                    </SelectItem>
+                                    <SelectItem value="rented">
+                                      Rented
+                                    </SelectItem>
+                                    <SelectItem value="sold">Sold</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="price">Price</Label>
+                                <Input
+                                  id="price"
+                                  name="price"
+                                  type="number"
+                                  defaultValue={editingListing?.price}
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="description">Description</Label>
+                                <Textarea
+                                  id="description"
+                                  name="description"
+                                  defaultValue={editingListing?.description}
+                                  required
+                                />
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="bedrooms">Bedrooms</Label>
+                                  <Input
+                                    id="bedrooms"
+                                    name="bedrooms"
+                                    type="number"
+                                    defaultValue={editingListing?.bedrooms}
+                                    required
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="bathrooms">Bathrooms</Label>
+                                  <Input
+                                    id="bathrooms"
+                                    name="bathrooms"
+                                    type="number"
+                                    defaultValue={editingListing?.bathrooms}
+                                    required
+                                  />
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="images">
+                                  Listing Images (Max 4)
+                                </Label>
+                                <StyledImagePicker onChange={handleImages} />
+                                <ImagePreview
+                                  images={pickedImages}
+                                  onRemove={(index) =>
+                                    setPickedImages((images) =>
+                                      images.filter((_, i) => i !== index)
+                                    )
+                                  }
+                                />
+                              </div>
+                            </div>
+                            <DialogFooter className="mt-4">
+                              <Button type="submit">Save changes</Button>
+                            </DialogFooter>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleDeleteListing(listing.id)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" /> Delete
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button className="w-full">
+                    <Plus className="w-4 h-4 mr-2" /> Add New Listing
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Listing</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleAddListing}>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="new-title">Title</Label>
+                        <Input id="new-title" name="title" required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="new-status">Status</Label>
+                        <Select
+                          onValueChange={(value) => setStatus(value)}
+                          name="status"
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="available">Available</SelectItem>
+                            <SelectItem value="rented">Rented</SelectItem>
+                            <SelectItem value="sold">Sold</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="new-price">Price</Label>
+                        <Input
+                          id="new-price"
+                          name="price"
+                          type="number"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="new-description">Description</Label>
+                        <Textarea
+                          id="new-description"
+                          name="description"
+                          required
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="new-bedrooms">Bedrooms</Label>
+                          <Input
+                            id="new-bedrooms"
+                            name="bedrooms"
+                            type="number"
+                            required
                           />
                         </div>
-                      ))}
-                    </div>
-                    <p>{listing.description}</p>
-                    <p className="mt-2">
-                      Bedrooms: {listing.bedrooms}, Bathrooms:{" "}
-                      {listing.bathrooms}
-                    </p>
-                  </CardContent>
-                  <CardFooter className="flex justify-end space-x-2">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          onClick={() => setEditingListing(listing)}
-                        >
-                          <Pencil className="w-4 h-4 mr-2" /> Edit
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Edit Listing</DialogTitle>
-                        </DialogHeader>
-                        <form
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            const formData = new FormData(e.currentTarget);
-                            if (editingListing) {
-                              handleEditListing({
-                                ...editingListing,
-                                title: formData.get("title") as string,
-                                status: formData.get("status") as
-                                  | "available"
-                                  | "rented"
-                                  | "sold",
-                                price: Number(formData.get("price")),
-                                description: formData.get(
-                                  "description"
-                                ) as string,
-                                bedrooms: Number(formData.get("bedrooms")),
-                                bathrooms: Number(formData.get("bathrooms")),
-                              });
-                            }
-                          }}
-                        >
-                          <div className="space-y-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="title">Title</Label>
-                              <Input
-                                id="title"
-                                name="title"
-                                defaultValue={editingListing?.title}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="status">Status</Label>
-                              <Select
-                                name="status"
-                                defaultValue={editingListing?.status}
-                              >
-                                <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="available">
-                                    Available
-                                  </SelectItem>
-                                  <SelectItem value="rented">Rented</SelectItem>
-                                  <SelectItem value="sold">Sold</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="price">Price</Label>
-                              <Input
-                                id="price"
-                                name="price"
-                                type="number"
-                                defaultValue={editingListing?.price}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="description">Description</Label>
-                              <Textarea
-                                id="description"
-                                name="description"
-                                defaultValue={editingListing?.description}
-                                required
-                              />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="bedrooms">Bedrooms</Label>
-                                <Input
-                                  id="bedrooms"
-                                  name="bedrooms"
-                                  type="number"
-                                  defaultValue={editingListing?.bedrooms}
-                                  required
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="bathrooms">Bathrooms</Label>
-                                <Input
-                                  id="bathrooms"
-                                  name="bathrooms"
-                                  type="number"
-                                  defaultValue={editingListing?.bathrooms}
-                                  required
-                                />
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="images">
-                                Listing Images (Max 4)
-                              </Label>
-                              <StyledImagePicker onChange={handleImages} />
-                              <ImagePreview
-                                images={pickedImages}
-                                onRemove={(index) =>
-                                  setPickedImages((images) =>
-                                    images.filter((_, i) => i !== index)
-                                  )
-                                }
-                              />
-                            </div>
-                          </div>
-                          <DialogFooter className="mt-4">
-                            <Button type="submit">Save changes</Button>
-                          </DialogFooter>
-                        </form>
-                      </DialogContent>
-                    </Dialog>
-                    <Button
-                      variant="destructive"
-                      onClick={() => handleDeleteListing(listing.id)}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" /> Delete
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="w-full">
-                  <Plus className="w-4 h-4 mr-2" /> Add New Listing
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Listing</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleAddListing}>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="new-title">Title</Label>
-                      <Input id="new-title" name="title" required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="new-status">Status</Label>
-                      <Select
-                        onValueChange={(value) => setStatus(value)}
-                        name="status"
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="available">Available</SelectItem>
-                          <SelectItem value="rented">Rented</SelectItem>
-                          <SelectItem value="sold">Sold</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="new-price">Price</Label>
-                      <Input
-                        id="new-price"
-                        name="price"
-                        type="number"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="new-description">Description</Label>
-                      <Textarea
-                        id="new-description"
-                        name="description"
-                        required
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="new-bedrooms">Bedrooms</Label>
-                        <Input
-                          id="new-bedrooms"
-                          name="bedrooms"
-                          type="number"
-                          required
-                        />
+                        <div className="space-y-2">
+                          <Label htmlFor="new-bathrooms">Bathrooms</Label>
+                          <Input
+                            id="new-bathrooms"
+                            name="bathrooms"
+                            type="number"
+                            required
+                          />
+                        </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="new-bathrooms">Bathrooms</Label>
-                        <Input
-                          id="new-bathrooms"
-                          name="bathrooms"
-                          type="number"
-                          required
+                        <Label htmlFor="new-images">
+                          Listing Images (Max 4)
+                        </Label>
+                        <StyledImagePicker onChange={handleNewListingImages} />
+                        <ImagePreview
+                          images={newListingImages}
+                          onRemove={(index) =>
+                            setNewListingImages((images) =>
+                              images.filter((_, i) => i !== index)
+                            )
+                          }
                         />
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="new-images">Listing Images (Max 4)</Label>
-                      <StyledImagePicker onChange={handleNewListingImages} />
-                      <ImagePreview
-                        images={newListingImages}
-                        onRemove={(index) =>
-                          setNewListingImages((images) =>
-                            images.filter((_, i) => i !== index)
-                          )
-                        }
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter className="mt-4">
-                    <Button type="submit">Add Listing</Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </CardFooter>
-        </Card>
+                    <DialogFooter className="mt-4">
+                      <Button disabled={listingLoading} type="submit">
+                        Add Listing{" "}
+                        {listingLoading ? (
+                          <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                        ) : null}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </CardFooter>
+          </Card>
+        ) : (
+          <div>
+            <p>your listings will appear here</p>
+          </div>
+        )}
       </div>
     </div>
   );
