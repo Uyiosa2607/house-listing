@@ -1,6 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -23,9 +25,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import Link from "next/link";
 
-type Listing = {
+interface Listing {
   id: string;
   title: string;
   price: number;
@@ -33,87 +34,89 @@ type Listing = {
   bathrooms: number;
   squareFeet: number;
   description: string;
-  images: string[];
-  features: string[];
+  img: string[];
   address: string;
   realtor: {
     id: string;
     name: string;
     phone: string;
     email: string;
-    image: string;
+    img: string;
   };
-};
+}
 
-const mockListing: Listing = {
-  id: "1",
-  title: "Luxurious Downtown Penthouse",
-  price: 5000,
-  bedrooms: 3,
-  bathrooms: 2.5,
-  squareFeet: 2000,
-  description:
-    "Experience urban living at its finest in this stunning penthouse apartment. Featuring breathtaking city views, high-end finishes, and an open concept layout perfect for entertaining. This luxurious home offers the best of city life with all the comforts you desire.",
-  images: [
-    "/placeholder.svg",
-    "/placeholder.svg",
-    "/placeholder.svg",
-    "/placeholder.svg",
-  ],
-  features: [
-    "Floor-to-ceiling windows",
-    "Gourmet kitchen with top-of-the-line appliances",
-    "Private terrace",
-    "In-unit laundry",
-    "Central air conditioning",
-    "Hardwood floors throughout",
-    "24/7 concierge service",
-    "Fitness center and pool access",
-  ],
-  address: "123 Main St, Cityville, State 12345",
-  realtor: {
-    id: "1",
-    name: "Jane Smith",
-    phone: "(555) 123-4567",
-    email: "jane.smith@realestate.com",
-    image: "/placeholder.svg",
-  },
-};
+export default function ListingDetails({
+  params,
+}: {
+  params: {
+    id: string;
+  };
+}) {
+  const { id } = params;
 
-export default function ListingDetails() {
+  const router = useRouter();
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [listing, setListing] = useState<Listing | null>(null); // Changed to null
 
+  async function getListing(id: string) {
+    const supabase = createClient();
+
+    try {
+      const { error, data } = await supabase
+        .from("listing")
+        .select("*")
+        .eq("id", id);
+      if (!error && data.length > 0) {
+        setListing(data[0]);
+        console.log(data[0]);
+      }
+    } catch (error) {
+      console.log("An error occurred trying to fetch data:", error);
+    }
+  }
+
+  useEffect(() => {
+    getListing(id);
+  }, [id]);
   const nextImage = () => {
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === mockListing.images.length - 1 ? 0 : prevIndex + 1
-    );
+    if (listing) {
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === listing.img.length - 1 ? 0 : prevIndex + 1
+      );
+    }
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === 0 ? mockListing.images.length - 1 : prevIndex - 1
-    );
+    if (listing) {
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === 0 ? listing.img.length - 1 : prevIndex - 1
+      );
+    }
   };
+
+  // Loading state
+  if (!listing) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-4">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
-          <Link
-            href="/listings"
-            className="flex items-center text-blue-500 hover:underline"
+          <div
+            onClick={() => router.back()}
+            className="flex items-center text-blue-500 hover:underline cursor-pointer"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Listings
-          </Link>
-          <h1 className="text-3xl font-bold text-center">
-            {mockListing.title}
-          </h1>
+          </div>
+          <h1 className="text-3xl font-bold text-center">{listing.title}</h1>
         </div>
 
         <div className="relative">
           <img
-            src={mockListing.images[currentImageIndex]}
+            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${listing.img[currentImageIndex]}`}
             alt={`Listing image ${currentImageIndex + 1}`}
             className="w-full h-[400px] object-cover rounded-lg"
           />
@@ -134,7 +137,7 @@ export default function ListingDetails() {
             <ChevronRight className="h-4 w-4" />
           </Button>
           <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
-            {currentImageIndex + 1} / {mockListing.images.length}
+            {currentImageIndex + 1} / {listing.img.length}
           </div>
         </div>
 
@@ -142,28 +145,28 @@ export default function ListingDetails() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-center pb-2">
               <Bed className="h-4 w-4 mr-2" />
-              <CardTitle>{mockListing.bedrooms}</CardTitle>
+              <CardTitle>{listing.bedrooms}</CardTitle>
             </CardHeader>
             <CardDescription>Bedrooms</CardDescription>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-center pb-2">
               <Bath className="h-4 w-4 mr-2" />
-              <CardTitle>{mockListing.bathrooms}</CardTitle>
+              <CardTitle>{listing.bathrooms}</CardTitle>
             </CardHeader>
             <CardDescription>Bathrooms</CardDescription>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-center pb-2">
               <Home className="h-4 w-4 mr-2" />
-              <CardTitle>{mockListing.squareFeet}</CardTitle>
+              <CardTitle>{listing.squareFeet}</CardTitle>
             </CardHeader>
             <CardDescription>Sq Ft</CardDescription>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-center pb-2">
               <DollarSign className="h-4 w-4 mr-2" />
-              <CardTitle>{mockListing.price}</CardTitle>
+              <CardTitle>{listing.price}</CardTitle>
             </CardHeader>
             <CardDescription>Per Month</CardDescription>
           </Card>
@@ -181,7 +184,7 @@ export default function ListingDetails() {
                 <CardTitle>About this property</CardTitle>
               </CardHeader>
               <CardContent>
-                <p>{mockListing.description}</p>
+                <p>{listing.description}</p>
               </CardContent>
             </Card>
           </TabsContent>
@@ -192,9 +195,9 @@ export default function ListingDetails() {
               </CardHeader>
               <CardContent>
                 <ul className="list-disc pl-5 space-y-2">
-                  {mockListing.features.map((feature, index) => (
+                  {/* {listing.features.map((feature, index) => (
                     <li key={index}>{feature}</li>
-                  ))}
+                  ))} */}
                 </ul>
               </CardContent>
             </Card>
@@ -206,7 +209,7 @@ export default function ListingDetails() {
               </CardHeader>
               <CardContent className="flex items-center">
                 <MapPin className="h-5 w-5 mr-2 flex-shrink-0" />
-                <p>{mockListing.address}</p>
+                <p>{listing.address}</p>
               </CardContent>
             </Card>
           </TabsContent>
@@ -217,25 +220,31 @@ export default function ListingDetails() {
             <CardTitle>Contact Realtor</CardTitle>
           </CardHeader>
           <CardContent className="flex items-center space-x-4">
-            <img
-              src={mockListing.realtor.image}
-              alt={mockListing.realtor.name}
+            {/* <img
+              src={listing.realtor.img}
+              alt={listing.realtor.name}
               className="w-16 h-16 rounded-full object-cover"
-            />
+            /> */}
             <div>
-              <h3 className="font-semibold">{mockListing.realtor.name}</h3>
+              {/* <h3 className="font-semibold">{listing.realtor.name}</h3> */}
               <div className="flex items-center mt-2">
                 <Phone className="h-4 w-4 mr-2" />
-                <span>{mockListing.realtor.phone}</span>
+                {/* <span>{listing.realtor.phone}</span> */}
               </div>
               <div className="flex items-center mt-1">
                 <Mail className="h-4 w-4 mr-2" />
-                <span>{mockListing.realtor.email}</span>
+                {/* <span>{listing.realtor.email}</span> */}
               </div>
             </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full">Contact Realtor</Button>
+            {/* <Button
+              onClick={() =>
+                window.open(`mailto:${listing.realtor.email}`, "_blank")
+              }
+            >
+              Email Realtor
+            </Button> */}
           </CardFooter>
         </Card>
       </div>

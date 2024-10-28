@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
 import {
   Card,
   CardContent,
@@ -28,46 +29,48 @@ type Listing = {
   bedrooms: number;
   bathrooms: number;
   description: string;
-  image: string;
+  img: string;
   realtor: {
     id: string;
     name: string;
   };
 };
 
-const mockListings: Listing[] = [
-  {
-    id: "1",
-    title: "Modern Apartment in Downtown",
-    price: 2000,
-    bedrooms: 2,
-    bathrooms: 2,
-    description: "A beautiful modern apartment in the heart of downtown.",
-    image: "/placeholder.svg",
-    realtor: { id: "1", name: "John Doe" },
-  },
-  {
-    id: "2",
-    title: "Cozy Suburban House",
-    price: 1500,
-    bedrooms: 3,
-    bathrooms: 2,
-    description: "A cozy house in a quiet suburban neighborhood.",
-    image: "/placeholder.svg",
-    realtor: { id: "2", name: "Jane Smith" },
-  },
-  // Add more mock listings as needed
-];
-
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [priceFilter, setPriceFilter] = useState<string>("");
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [fetchLoading, setFecthLoading] = useState<boolean>(false);
 
-  const filteredListings = mockListings.filter(
+  const filteredListings = listings.filter(
     (listing) =>
       listing.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
       (priceFilter === "" || listing.price <= parseInt(priceFilter))
   );
+
+  async function getListing() {
+    const supabase = createClient();
+    const id = (await supabase.auth.getUser()).data.user?.id;
+    try {
+      setFecthLoading(true);
+      const { error, data } = await supabase
+        .from("listing")
+        .select("*")
+        .eq("author_id", id)
+        .order("created_at", { ascending: false });
+      if (error) return console.log(error);
+      setListings(data);
+      console.log(data);
+    } catch (error) {
+      console.log("an error occured while trying to fecth data:", error);
+    } finally {
+      setFecthLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    getListing();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-4">
@@ -99,48 +102,50 @@ export default function Home() {
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredListings.map((listing) => (
-            <Card key={listing.id} className="flex flex-col">
-              <img
-                src={listing.image}
-                alt={listing.title}
-                className="h-48 w-full object-cover"
-              />
-              <CardHeader>
-                <CardTitle>{listing.title}</CardTitle>
-                <CardDescription>
-                  <Link
-                    href={`/realtor/${listing.realtor.id}`}
-                    className="text-blue-500 hover:underline"
-                  >
-                    {listing.realtor.name}
-                  </Link>
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-500 line-clamp-2">
-                  {listing.description}
-                </p>
-                <div className="flex justify-between items-center mt-4">
-                  <div className="flex items-center">
-                    <Bed className="h-4 w-4 mr-1" />
-                    <span className="text-sm">{listing.bedrooms}</span>
+            <Link href={`/listing/${listing.id}`} key={listing.id}>
+              <Card key={listing.id} className="flex flex-col">
+                <img
+                  src={`${process.env
+                    .NEXT_PUBLIC_SUPABASE_URL!}/storage/v1/object/public/storage/${
+                    listing.img[0]
+                  }`}
+                  alt={listing.title}
+                  className="h-48 w-full object-cover"
+                />
+                <CardHeader>
+                  <CardTitle>{listing.title}</CardTitle>
+                  <CardDescription>
+                    <Link href={""} className="text-blue-500 hover:underline">
+                      {""}
+                    </Link>
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-500 line-clamp-2">
+                    {listing.description}
+                  </p>
+                  <div className="flex justify-between items-center mt-4">
+                    <div className="flex items-center">
+                      <Bed className="h-4 w-4 mr-1" />
+                      <span className="text-sm">{listing.bedrooms}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Bath className="h-4 w-4 mr-1" />
+                      <span className="text-sm">{listing.bathrooms}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <DollarSign className="h-4 w-4 mr-1" />
+                      <span className="text-sm font-bold">
+                        {listing.price}/mo
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center">
-                    <Bath className="h-4 w-4 mr-1" />
-                    <span className="text-sm">{listing.bathrooms}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <DollarSign className="h-4 w-4 mr-1" />
-                    <span className="text-sm font-bold">
-                      {listing.price}/mo
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="mt-auto">
-                <Button className="w-full">View Details</Button>
-              </CardFooter>
-            </Card>
+                </CardContent>
+                <CardFooter className="mt-auto">
+                  <Button className="w-full">View Details</Button>
+                </CardFooter>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>
