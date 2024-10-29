@@ -25,6 +25,7 @@ import {
   ChevronRight,
   Loader,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 interface Listing {
   id: string;
@@ -143,32 +144,43 @@ export default function ListingDetails({
           <h1 className="text-3xl font-bold text-center">{listing.title}</h1>
         </div>
 
-        <div className="relative">
-          <img
-            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${listing.img[currentImageIndex]}`}
-            alt={`Listing image ${currentImageIndex + 1}`}
-            className="w-full h-[400px] object-cover rounded-lg"
-          />
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute left-2 top-1/2 transform -translate-y-1/2"
-            onClick={prevImage}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute right-2 top-1/2 transform -translate-y-1/2"
-            onClick={nextImage}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
-            {currentImageIndex + 1} / {listing.img.length}
+        <Dialog>
+          <div className="relative">
+            <DialogTrigger>
+              <img
+                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${listing.img[currentImageIndex]}`}
+                alt={`Listing image ${currentImageIndex + 1}`}
+                className="w-full h-auto object-cover rounded-lg"
+              />
+            </DialogTrigger>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2"
+              onClick={prevImage}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2"
+              onClick={nextImage}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
+              {currentImageIndex + 1} / {listing.img.length}
+            </div>
           </div>
-        </div>
+          <DialogContent>
+            <img
+              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${listing.img[currentImageIndex]}`}
+              alt={`Listing image ${currentImageIndex + 1}`}
+              className="w-full h-auto object-contain"
+            />
+          </DialogContent>
+        </Dialog>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
           <Card>

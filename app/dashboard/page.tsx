@@ -159,7 +159,7 @@ export default function UserDashboard() {
       setListings(data);
       console.log(data);
     } catch (error) {
-      console.log("an error occured while trying to fecth data:", error);
+      console.log("an error occurred while trying to fetch data:", error);
     } finally {
       setFecthLoading(false);
     }
