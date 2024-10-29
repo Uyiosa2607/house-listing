@@ -116,9 +116,7 @@ export default function Home() {
                 <div className="flex justify-between items-center mt-4">
                   <div className="flex items-center"></div>
                   <div className="flex items-center"></div>
-                  <div className="flex items-center">
-                    <DollarSign className="h-4 w-4 mr-1" />
-                  </div>
+                  <div className="flex items-center"></div>
                 </div>
               </CardContent>
               <CardFooter className="mt-auto">
@@ -127,7 +125,6 @@ export default function Home() {
             </Card>
           ) : (
             <>
-              {" "}
               {filteredListings.map((listing) => (
                 <Link href={`/listing/${listing.id}`} key={listing.id}>
                   <Card key={listing.id} className="flex flex-col">
