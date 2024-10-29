@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Bed, Bath, DollarSign, Search } from "lucide-react";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Listing = {
   id: string;
@@ -40,7 +41,7 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [priceFilter, setPriceFilter] = useState<string>("");
   const [listings, setListings] = useState<Listing[]>([]);
-  const [fetchLoading, setFecthLoading] = useState<boolean>(false);
+  const [fetchLoading, setFecthLoading] = useState<boolean>(true);
 
   const filteredListings = listings.filter(
     (listing) =>
@@ -75,7 +76,9 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-4">
       <div className="max-w-6xl mx-auto space-y-8">
-        <h1 className="text-4xl font-bold text-center">Available Listings</h1>
+        <h1 className="text-2xl pt-4 font-semibold text-center">
+          Available Listings
+        </h1>
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-grow">
             <Search className="absolute left-2 top-3 h-4 w-4 text-gray-500" />
@@ -101,52 +104,74 @@ export default function Home() {
           </Select>
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredListings.map((listing) => (
-            <Link href={`/listing/${listing.id}`} key={listing.id}>
-              <Card key={listing.id} className="flex flex-col">
-                <img
-                  src={`${process.env
-                    .NEXT_PUBLIC_SUPABASE_URL!}/storage/v1/object/public/storage/${
-                    listing.img[0]
-                  }`}
-                  alt={listing.title}
-                  className="h-48 w-full object-cover"
-                />
-                <CardHeader>
-                  <CardTitle>{listing.title}</CardTitle>
-                  <CardDescription>
-                    <Link href={""} className="text-blue-500 hover:underline">
-                      {""}
-                    </Link>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500 line-clamp-2">
-                    {listing.description}
-                  </p>
-                  <div className="flex justify-between items-center mt-4">
-                    <div className="flex items-center">
-                      <Bed className="h-4 w-4 mr-1" />
-                      <span className="text-sm">{listing.bedrooms}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Bath className="h-4 w-4 mr-1" />
-                      <span className="text-sm">{listing.bathrooms}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <DollarSign className="h-4 w-4 mr-1" />
-                      <span className="text-sm font-bold">
-                        {listing.price}/mo
-                      </span>
-                    </div>
+          {fetchLoading ? (
+            <Card className="flex flex-col">
+              <Skeleton className="h-48 w-full object-cover" />
+              <CardHeader>
+                <Skeleton className="h-5" />
+                <CardDescription></CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-5 w-[70%]" />
+                <div className="flex justify-between items-center mt-4">
+                  <div className="flex items-center"></div>
+                  <div className="flex items-center"></div>
+                  <div className="flex items-center">
+                    <DollarSign className="h-4 w-4 mr-1" />
                   </div>
-                </CardContent>
-                <CardFooter className="mt-auto">
-                  <Button className="w-full">View Details</Button>
-                </CardFooter>
-              </Card>
-            </Link>
-          ))}
+                </div>
+              </CardContent>
+              <CardFooter className="mt-auto">
+                <Skeleton className="h-8" />
+              </CardFooter>
+            </Card>
+          ) : (
+            <>
+              {" "}
+              {filteredListings.map((listing) => (
+                <Link href={`/listing/${listing.id}`} key={listing.id}>
+                  <Card key={listing.id} className="flex flex-col">
+                    <img
+                      src={`${process.env
+                        .NEXT_PUBLIC_SUPABASE_URL!}/storage/v1/object/public/storage/${
+                        listing.img[0]
+                      }`}
+                      alt={listing.title}
+                      className="h-48 w-full object-cover"
+                    />
+                    <CardHeader>
+                      <CardTitle>{listing.title}</CardTitle>
+                      <CardDescription></CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-500 line-clamp-2">
+                        {listing.description}
+                      </p>
+                      <div className="flex justify-between items-center mt-4">
+                        <div className="flex items-center">
+                          <Bed className="h-4 w-4 mr-1" />
+                          <span className="text-sm">{listing.bedrooms}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Bath className="h-4 w-4 mr-1" />
+                          <span className="text-sm">{listing.bathrooms}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <DollarSign className="h-4 w-4 mr-1" />
+                          <span className="text-sm font-bold">
+                            {listing.price}/mo
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="mt-auto">
+                      <Button className="w-full">View Details</Button>
+                    </CardFooter>
+                  </Card>
+                </Link>
+              ))}
+            </>
+          )}
         </div>
       </div>
     </div>

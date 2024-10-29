@@ -16,7 +16,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Bed,
   Bath,
-  Home,
   DollarSign,
   MapPin,
   Phone,
@@ -24,6 +23,7 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  Loader,
 } from "lucide-react";
 
 interface Listing {
@@ -121,12 +121,13 @@ export default function ListingDetails({
     }
   };
 
-  // Loading state
   if (!listing) {
-    return <div>Loading...</div>;
+    return (
+      <main className="min-w-screen min-h-screen flex items-center justify-center">
+        <Loader className="w-10 h-10 animate-spin" />
+      </main>
+    );
   }
-
-  console.log(listing);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-4">
