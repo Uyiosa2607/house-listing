@@ -117,9 +117,6 @@ function StyledImagePicker({
                         <span className="font-semibold">Click to upload</span> or drag and
                         drop
                     </p>
-                    {/* <p className="text-xs text-gray-500 dark:text-gray-400">
-            SVG, PNG, JPG or GIF (MAX. 800x400px)
-          </p> */}
                 </div>
                 <input
                     id="dropzone-file"
@@ -198,13 +195,11 @@ export default function UserDashboard() {
         try {
             const listingToDelete = await supabase.from("listing").select("*").eq("id", id)
             if (listingToDelete.error) return console.log("No listing found with provided id")
-            console.log("listing to delete:", listingToDelete)
-            const {error, data} = await supabase.from("listing").delete().eq("id", listingToDelete?.data[0]?.id)
-            if (error) return console.log(error);
-            console.log("deleted listing data", data)
+            const {error} = await supabase.from("listing").delete().eq("id", listingToDelete?.data[0]?.id)
+            if (error) return console.log("error occurred trying to delete listing", error);
+            if (listingToDelete.data[0]?.img < 1) return console.log("listing deleted!")
             const deleteListingImages = await supabase.storage.from("storage").remove(listingToDelete?.data[0]?.img)
             if (deleteListingImages.error) return console.log("error deleting images:", deleteListingImages.error)
-            console.log("Images deleted:", deleteListingImages.data)
         } catch (error) {
             console.log("error occurred while deleting listing:", error);
         }
@@ -262,6 +257,7 @@ export default function UserDashboard() {
         try {
             setListingLoading(true);
             const uploadedImages = await uploadImagesToSupabase(newListingImages);
+            if (uploadedImages.error) return console.log("error uploading images")
             const {data, error} = await supabase
                 .from("listing")
                 .insert([
@@ -300,9 +296,6 @@ export default function UserDashboard() {
         setEditingListing(null);
     };
 
-    const handleDeleteListing = (id: string) => {
-        setListings(listings.filter((listing) => listing.id !== id));
-    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-4">
