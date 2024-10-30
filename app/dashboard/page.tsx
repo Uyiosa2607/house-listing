@@ -257,7 +257,7 @@ export default function UserDashboard() {
         try {
             setListingLoading(true);
             const uploadedImages = await uploadImagesToSupabase(newListingImages);
-            if (uploadedImages.error) return console.log("error uploading images")
+            if (!uploadedImages) return console.log("error uploading images")
             const {data, error} = await supabase
                 .from("listing")
                 .insert([
