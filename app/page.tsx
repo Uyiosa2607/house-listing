@@ -10,6 +10,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import {useRouter} from "next/navigation";
 import {Input} from "@/components/ui/input";
 import {
     Select,
@@ -43,6 +44,8 @@ export default function Home() {
     const [listings, setListings] = useState<Listing[]>([]);
     const [fetchLoading, setFecthLoading] = useState<boolean>(true);
 
+    const router = useRouter()
+
     const filteredListings = listings.filter(
         (listing) =>
             listing.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -53,11 +56,11 @@ export default function Home() {
         const supabase = createClient();
         const id = (await supabase.auth.getUser()).data.user?.id;
         try {
+            if (!id) return
             setFecthLoading(true);
             const {error, data} = await supabase
                 .from("listing")
                 .select("*")
-                .eq("author_id", id)
                 .order("created_at", {ascending: false});
             if (error) return console.log(error);
             setListings(data);
@@ -70,6 +73,17 @@ export default function Home() {
     }
 
     useEffect(() => {
+        async function getAuthStatus() {
+            const supabase = createClient()
+            try {
+                const {data} = await supabase.auth.getUser()
+                if (!data?.user?.id) return router.push("/login")
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        getAuthStatus()
         getListing();
     }, []);
 

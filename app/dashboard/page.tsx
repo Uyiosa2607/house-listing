@@ -11,6 +11,7 @@ import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Textarea} from "@/components/ui/textarea";
+import {useRouter} from "next/navigation";
 import {
     Card,
     CardContent,
@@ -36,7 +37,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import {Plus, Pencil, Trash2, Upload, X, Loader2, Loader} from "lucide-react";
+import {Plus, Pencil, Trash2, Upload, X, Loader2, Loader, LogOut} from "lucide-react";
 
 type Listing = {
     id: string;
@@ -142,6 +143,8 @@ export default function UserDashboard() {
     const [listings, setListings] = useState<Listing[]>([]);
 
     const {fetchUser, userInfo, auth, loading} = useStore();
+
+    const router = useRouter()
 
     async function getListing() {
         const supabase = createClient();
@@ -296,6 +299,16 @@ export default function UserDashboard() {
         setEditingListing(null);
     };
 
+    async function handleLogout() {
+        const supabase = createClient()
+        try {
+            const {error} = await supabase.auth.signOut();
+            if (!error) return router.push("/login")
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
 
     if (loading) return <main className="min-w-screen min-h-screen flex items-center justify-center">
         <Loader className="w-6 h-6 animate-spin"/>
@@ -307,8 +320,15 @@ export default function UserDashboard() {
                 <div className="max-w-4xl mx-auto space-y-8">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-2xl font-bold">User Dashboard</CardTitle>
-                            <CardDescription>Manage your profile and listings</CardDescription>
+                            <div className="flex justify-between">
+                                <div>
+                                    <CardTitle className="text-2xl font-bold">User Dashboard</CardTitle>
+                                    <CardDescription>Manage your profile and listings</CardDescription>
+                                </div>
+                                <Button onClick={handleLogout} size={"sm"} variant={"destructive"}>
+                                    Logout <LogOut size={20} className="ml-2"/>
+                                </Button>
+                            </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex items-center space-x-4">
