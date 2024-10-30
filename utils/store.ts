@@ -17,7 +17,7 @@ interface useStore {
 const useStore = create<useStore>((set) => ({
     userInfo: null,
     auth: false,
-    loading: false,
+    loading: true,
 
     fetchUser: async () => {
         const supabase = createClient();
