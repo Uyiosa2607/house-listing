@@ -4,8 +4,11 @@ import {createClient} from "@/utils/supabase/client";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Button} from "@/components/ui/button";
+import {Loader2} from "lucide-react"
 
 export default function Form() {
+    const [loading, setLoading] = useState<boolean>(false);
+
     async function handleRegister(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
@@ -15,6 +18,7 @@ export default function Form() {
         const phone = formData.get("phone") as string
         const supabase = createClient();
         try {
+            setLoading(true);
             const createUser = await supabase.auth.signUp({
                 email,
                 password,
@@ -42,6 +46,8 @@ export default function Form() {
             return console.log(data);
         } catch (error) {
             console.log(error);
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -81,7 +87,7 @@ export default function Form() {
             </div>
             {/* {error && <p className="text-red-500 text-sm">{error}</p>} */}
             <Button type="submit" className="w-full">
-                Create Account
+                Create Account {loading ? <Loader2 className="w-4 h-4 ml-2 animate-spin"/> : null}
             </Button>
         </form>
     );
