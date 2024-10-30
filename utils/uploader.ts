@@ -2,7 +2,7 @@ import {createClient} from "./supabase/server";
 
 const supabase = createClient();
 
-async function uploader(file) {
+async function uploader(file: File) {
     try {
         const {error, data} = await supabase.storage
             .from("storage")
