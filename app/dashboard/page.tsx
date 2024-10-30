@@ -192,6 +192,24 @@ export default function UserDashboard() {
         }
     };
 
+    async function deleteListing(id: string) {
+        const supabase = createClient();
+        console.log(id)
+        try {
+            const listingToDelete = await supabase.from("listing").select("*").eq("id", id)
+            if (listingToDelete.error) return console.log("No listing found with provided id")
+            console.log("listing to delete:", listingToDelete)
+            const {error, data} = await supabase.from("listing").delete().eq("id", listingToDelete?.data[0]?.id)
+            if (error) return console.log(error);
+            console.log("deleted listing data", data)
+            const deleteListingImages = await supabase.storage.from("storage").remove(listingToDelete?.data[0]?.img)
+            if (deleteListingImages.error) return console.log("error deleting images:", deleteListingImages.error)
+            console.log("Images deleted:", deleteListingImages.data)
+        } catch (error) {
+            console.log("error occurred while deleting listing:", error);
+        }
+    }
+
     async function uploadImagesToSupabase(imageFiles: File[]): Promise<string[]> {
         const supabase = createClient();
         const imagePaths: string[] = [];
@@ -530,7 +548,7 @@ export default function UserDashboard() {
                                             </Dialog>
                                             <Button
                                                 variant="destructive"
-                                                onClick={() => handleDeleteListing(listing.id)}
+                                                onClick={() => deleteListing(listing.id)}
                                             >
                                                 <Trash2 className="w-4 h-4 mr-2"/> Delete
                                             </Button>

@@ -135,15 +135,15 @@ export default function ListingDetails({
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-4">
             <div className="max-w-4xl mx-auto space-y-8">
-                <div className="flex items-center justify-between">
+                <div className="flex pt-5 items-center justify-between">
                     <div
                         onClick={() => router.back()}
-                        className="flex items-center text-blue-500 hover:underline cursor-pointer"
+                        className="flex flex-1 items-center text-blue-500 hover:underline cursor-pointer"
                     >
                         <ArrowLeft className="h-4 w-4 mr-2"/>
                         Back to Listings
                     </div>
-                    <h1 className="text-3xl font-bold text-center">{listing.title}</h1>
+                    <h1 className="text-xl w-[80%] truncate capitalize font-medium flex-1 text-center">{listing.title}</h1>
                 </div>
 
                 <Dialog>
