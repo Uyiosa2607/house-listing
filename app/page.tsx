@@ -23,6 +23,7 @@ import {Button} from "@/components/ui/button";
 import {Bed, Bath, DollarSign, Search} from "lucide-react";
 import Link from "next/link";
 import {Skeleton} from "@/components/ui/skeleton";
+import Navbar from "@/components/system/navbar";
 
 type Listing = {
     id: string;
@@ -89,6 +90,7 @@ export default function Home() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-4">
+            <Navbar/>
             <div className="max-w-6xl mx-auto space-y-8">
                 <h1 className="text-2xl pt-4 font-semibold text-center">
                     Available Listings
