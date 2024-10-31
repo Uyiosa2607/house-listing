@@ -37,7 +37,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import {Plus, Pencil, Trash2, Upload, X, Loader2, Loader, LogOut} from "lucide-react";
+import {Plus, Pencil, Trash2, Home, Upload, X, Loader2, Loader, LogOut} from "lucide-react";
 
 type Listing = {
     id: string;
@@ -348,9 +348,15 @@ export default function UserDashboard() {
                                 </div>
                             </div>
                             <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button>Update Profile</Button>
-                                </DialogTrigger>
+                                <div className="flex  items-center justify-between">
+                                    <DialogTrigger asChild>
+                                        <Button>Update Profile</Button>
+                                    </DialogTrigger>
+                                    <Button className="bg-blue-900 text-white" onClick={() => router.push("/")}> <Home
+                                        size={15}
+                                        className="ml-1"/> All
+                                        Listings </Button>
+                                </div>
                                 <DialogContent>
                                     <DialogHeader>
                                         <DialogTitle>Update Profile</DialogTitle>
