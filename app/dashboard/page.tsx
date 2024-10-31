@@ -139,7 +139,6 @@ export default function UserDashboard() {
     const [editingListing, setEditingListing] = useState<Listing | null>(null);
     const [newListingImages, setNewListingImages] = useState<File[]>([]);
     const [listingLoading, setListingLoading] = useState<boolean>(false);
-    const [fetchLoading, setFecthLoading] = useState<boolean>(false);
     const [listings, setListings] = useState<Listing[]>([]);
 
     const {fetchUser, userInfo, auth, loading} = useStore();
@@ -150,7 +149,6 @@ export default function UserDashboard() {
         const supabase = createClient();
         const id = (await supabase.auth.getUser()).data.user?.id;
         try {
-            setFecthLoading(true);
             const {error, data} = await supabase
                 .from("listing")
                 .select("*")
@@ -161,8 +159,6 @@ export default function UserDashboard() {
             console.log(data);
         } catch (error) {
             console.log("an error occurred while trying to fetch data:", error);
-        } finally {
-            setFecthLoading(false);
         }
     }
 
