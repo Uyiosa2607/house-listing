@@ -136,14 +136,14 @@ export default function ListingDetails({
         <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-4">
             <div className="max-w-4xl mx-auto space-y-8">
                 <div className="flex pt-5 items-center justify-between">
-                    <div
+                    <p
                         onClick={() => router.back()}
-                        className="flex flex-1 items-center text-blue-500 hover:underline cursor-pointer"
+                        className="flex text-sm flex-1 items-center text-blue-500 hover:underline cursor-pointer"
                     >
                         <ArrowLeft className="h-4 text-base font-semibold w-4 mr-2"/>
                         Back to Listings
-                    </div>
-                    <h1 className="text-lg w-[80%] justify-end pr-1 flex truncate capitalize font-medium flex-1 text-center">{listing.title}</h1>
+                    </p>
+                    <h1 className="text-sm w-[80%] justify-end pr-1 flex truncate capitalize font-medium flex-1 text-center">{listing.title}</h1>
                 </div>
 
                 <Dialog>
@@ -219,20 +219,20 @@ export default function ListingDetails({
                         <TabsTrigger value="description">Description</TabsTrigger>
                         <TabsTrigger value="location">Location</TabsTrigger>
                     </TabsList>
-                    <TabsContent value="description" className="mt-4">
+                    <TabsContent value="description" className="mt-2">
                         <Card>
-                            <CardHeader>
-                                <CardTitle>About this property</CardTitle>
+                            <CardHeader className="p-3">
+                                <CardTitle className="text-base font-semibold">About this property</CardTitle>
                             </CardHeader>
-                            <CardContent>
-                                <p>{listing.description}</p>
+                            <CardContent className="p-3">
+                                <p className="text-sm">{listing.description}</p>
                             </CardContent>
                         </Card>
                     </TabsContent>
                     <TabsContent value="location" className="mt-4">
                         <Card>
-                            <CardHeader>
-                                <CardTitle>Location</CardTitle>
+                            <CardHeader className="p-3">
+                                <CardTitle className="text-base">Location</CardTitle>
                             </CardHeader>
                             <CardContent className="flex items-center">
                                 <MapPin className="h-5 w-5 mr-2 flex-shrink-0"/>
@@ -243,30 +243,30 @@ export default function ListingDetails({
                 </Tabs>
 
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Contact Realtor</CardTitle>
+                    <CardHeader className="p-3">
+                        <CardTitle className="text-base">Contact Realtor</CardTitle>
                     </CardHeader>
-                    <CardContent className="flex items-center space-x-4">
+                    <CardContent className="flex py-2 gap-2 items-center">
                         <img
                             src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${author?.img}`}
                             alt={author?.name}
-                            className="w-16 h-16 rounded-full object-cover"
+                            className="w-12 h-12 rounded-full object-cover"
                         />
-                        <div>
-                            <h3 className="font-semibold">{author?.name}</h3>
-                            <div className="flex items-center mt-2">
-                                <Phone className="h-4 w-4 mr-2"/>
+                        <div className="mt-3">
+                            <h3 className="font-semibold text-sm">{author?.name}</h3>
+                            <p className="flex text-xs items-center mt-1">
+                                <Phone className="h-2 w-2 text-sm mr-1"/>
                                 {author?.phone}
-                            </div>
+                            </p>
                             <div className="flex items-center mt-1">
-                                <Mail className="h-4 w-4 mr-2"/>
-                                <span>{author?.email}</span>
+                                <Mail className="h-2 w-2 mr-1"/>
+                                <span className="text-sm">{author?.email}</span>
                             </div>
                         </div>
                     </CardContent>
-                    <CardFooter>
-                        <Button
-                            onClick={() => window.open(`mailto:${author?.email}`, "_blank")}
+                    <CardFooter className="p-2 pb-6">
+                        <Button className="bg-green-700 text-white"
+                                onClick={() => window.open(`mailto:${author?.email}`, "_blank")}
                         >
                             Email Realtor
                         </Button>
