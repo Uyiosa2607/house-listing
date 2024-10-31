@@ -333,7 +333,8 @@ export default function UserDashboard() {
                         <CardContent className="space-y-4">
                             <div className="flex items-center space-x-4">
                                 <Avatar className="w-20 h-20">
-                                    <AvatarImage src="/placeholder.svg" alt={userInfo?.name}/>
+                                    <AvatarImage
+                                        src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${userInfo?.img}`}/>
                                     <AvatarFallback>
                                         {userInfo?.name
                                             .split(" ")
