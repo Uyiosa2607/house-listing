@@ -4,7 +4,7 @@ import {useEffect} from "react";
 import {useStore} from "@/utils/store"
 import {createClient} from "@/utils/supabase/client"
 import {useRouter} from "next/navigation"
-import {LogOut} from "lucide-react"
+import {LogOut, CircleUserRound} from "lucide-react"
 
 export default function Navbar() {
 
