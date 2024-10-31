@@ -6,6 +6,7 @@ type User = {
     email: string;
     id: string;
     img: string | null
+    role: string
 };
 
 interface useStore {

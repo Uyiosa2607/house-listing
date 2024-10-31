@@ -20,7 +20,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import {Button} from "@/components/ui/button";
-import {Bed, Bath, DollarSign, Search} from "lucide-react";
+import {Bed, Bath, DollarSign, Search, Loader} from "lucide-react";
 import Link from "next/link";
 import {Skeleton} from "@/components/ui/skeleton";
 import Navbar from "@/components/system/navbar";
@@ -43,7 +43,8 @@ export default function Home() {
     const [searchTerm, setSearchTerm] = useState("");
     const [priceFilter, setPriceFilter] = useState<string>("");
     const [listings, setListings] = useState<Listing[]>([]);
-    const [fetchLoading, setFecthLoading] = useState<boolean>(true);
+    const [fetchLoading, setFetchLoading] = useState<boolean>(true);
+    const [loading, setLoading] = useState<boolean>(true)
 
     const router = useRouter()
 
@@ -58,7 +59,7 @@ export default function Home() {
         const id = (await supabase.auth.getUser()).data.user?.id;
         try {
             if (!id) return
-            setFecthLoading(true);
+            setFetchLoading(true);
             const {error, data} = await supabase
                 .from("listing")
                 .select("*")
@@ -67,9 +68,9 @@ export default function Home() {
             setListings(data);
             console.log(data);
         } catch (error) {
-            console.log("an error occured while trying to fecth data:", error);
+            console.log("an error occurred while trying to fetch data:", error);
         } finally {
-            setFecthLoading(false);
+            setFetchLoading(false);
         }
     }
 
@@ -77,8 +78,10 @@ export default function Home() {
         async function getAuthStatus() {
             const supabase = createClient()
             try {
+                setLoading(true)
                 const {data} = await supabase.auth.getUser()
                 if (!data?.user?.id) return router.push("/login")
+                setLoading(false)
             } catch (error) {
                 console.log(error)
             }
@@ -87,6 +90,10 @@ export default function Home() {
         getAuthStatus()
         getListing();
     }, []);
+
+    if (loading) return <main className="min-w-screen min-h-screen flex items-center justify-center">
+        <Loader className="w-5 h-5 animate-spin"/>
+    </main>
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-4">
