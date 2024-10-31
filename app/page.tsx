@@ -32,6 +32,7 @@ type Listing = {
     bedrooms: number;
     bathrooms: number;
     description: string;
+    location: string;
     img: string;
     realtor: {
         id: string;
@@ -99,7 +100,7 @@ export default function Home() {
         <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-4">
             <Navbar/>
             <div className="max-w-6xl mx-auto space-y-8">
-                <h1 className="text-2xl pt-4 font-semibold text-center">
+                <h1 className="text-lg pt-4 font-semibold text-center">
                     Available Listings
                 </h1>
                 <div className="flex flex-col sm:flex-row gap-4">

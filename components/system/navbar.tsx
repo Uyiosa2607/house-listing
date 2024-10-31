@@ -40,7 +40,7 @@ export default function Navbar() {
                                  src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${userInfo?.img}`}/>)}
                     </>}
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="p-1 w-[90%] md:w-[500px] rounded-lg">
                     <Card>
                         <CardHeader>
                             <p className="text-lg capitalize font-semibold text-center">profile details</p>
@@ -54,13 +54,14 @@ export default function Navbar() {
                                              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${userInfo?.img}`}/>)}
                                 </>}
                             </div>
-                            <div>
-                                <p className="text-xl capitalize font-medium text-center mb-1">{userInfo?.name}</p>
-                                <p className="text-lg font-medium text-center mb-2">{userInfo?.email}</p>
+                            <div className="mb-4">
+                                <p className="text-base capitalize font-medium text-center mb-1">{userInfo?.name}</p>
+                                <p className="text-sm font-medium text-center mb-2">{userInfo?.email}</p>
                             </div>
                             {userInfo?.role === "admin" ?
-                                <Button onClick={() => router.push("/dashboard")}
-                                        className="w-full text-center py-2"> Dashboard <UserRoundCog className="ml-2"/>
+                                <Button size={"sm"} onClick={() => router.push("/dashboard")}
+                                        className="w-full font-medium text-sm text-center py-2"> Dashboard <UserRoundCog
+                                    size={14} className="ml-2"/>
                                 </Button> : null}
                         </CardContent>
                     </Card>

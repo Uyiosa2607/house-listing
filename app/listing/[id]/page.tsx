@@ -37,7 +37,7 @@ interface Listing {
     description: string;
     img: string[];
     author_id: string;
-    address: string;
+    location: string;
     realtor: {
         id: string;
         name: string;
@@ -140,10 +140,10 @@ export default function ListingDetails({
                         onClick={() => router.back()}
                         className="flex flex-1 items-center text-blue-500 hover:underline cursor-pointer"
                     >
-                        <ArrowLeft className="h-4 w-4 mr-2"/>
+                        <ArrowLeft className="h-4 text-base font-semibold w-4 mr-2"/>
                         Back to Listings
                     </div>
-                    <h1 className="text-xl w-[80%] truncate capitalize font-medium flex-1 text-center">{listing.title}</h1>
+                    <h1 className="text-lg w-[80%] justify-end pr-1 flex truncate capitalize font-medium flex-1 text-center">{listing.title}</h1>
                 </div>
 
                 <Dialog>
@@ -236,7 +236,7 @@ export default function ListingDetails({
                             </CardHeader>
                             <CardContent className="flex items-center">
                                 <MapPin className="h-5 w-5 mr-2 flex-shrink-0"/>
-                                <p>{listing.address}</p>
+                                <p>{listing.location}</p>
                             </CardContent>
                         </Card>
                     </TabsContent>

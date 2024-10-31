@@ -48,6 +48,7 @@ type Listing = {
     bedrooms: number;
     bathrooms: number;
     img: string[];
+    location: string;
 };
 
 function ImagePreview({
@@ -252,6 +253,7 @@ export default function UserDashboard() {
         const bedrooms = Number(formData.get("bedrooms"));
         const price = Number(formData.get("price"));
         const description = formData.get("description") as string;
+        const location = formData.get("location") as string
 
         try {
             setListingLoading(true);
@@ -268,6 +270,7 @@ export default function UserDashboard() {
                         bathrooms,
                         price,
                         description,
+                        location,
                         img: uploadedImages,
                     },
                 ])
@@ -381,6 +384,7 @@ export default function UserDashboard() {
                                                     required
                                                 />
                                             </div>
+
                                             <div className="space-y-2">
                                                 <Label htmlFor="phone">Phone</Label>
                                                 <Input id="phone" name="phone" type="tel" required/>
@@ -625,6 +629,14 @@ export default function UserDashboard() {
                                                     <Textarea
                                                         id="new-description"
                                                         name="description"
+                                                        required
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="location">Location</Label>
+                                                    <Textarea
+                                                        id="location"
+                                                        name="location"
                                                         required
                                                     />
                                                 </div>
