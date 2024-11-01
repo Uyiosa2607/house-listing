@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-
+// import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Home, Mail } from "lucide-react";
+import { Home } from "lucide-react";
 import Form from "./form";
 
 export default function RegisterPage() {
@@ -33,7 +33,12 @@ export default function RegisterPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <Form />
-          <div className="relative">
+          <Link href="/login">
+            <span className="text-xs underline text-blue-400">
+              Already have an account?
+            </span>
+          </Link>
+          {/* <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
@@ -42,15 +47,15 @@ export default function RegisterPage() {
                 Or sign up with
               </span>
             </div>
-          </div>
-          <Button
+          </div> */}
+          {/* <Button
             variant="outline"
             className="w-full"
             // onClick={handleGoogleRegister}
           >
             <Mail className="mr-2 h-4 w-4" />
             Google
-          </Button>
+          </Button> */}
         </CardContent>
         <CardFooter>
           <p className="text-xs text-center w-full text-gray-600">
