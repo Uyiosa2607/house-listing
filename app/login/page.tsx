@@ -13,13 +13,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Home, Mail, Loader2 } from "lucide-react";
+import { Home, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
   const [loading, setLoading] = useState<boolean>(false);
 
   const router = useRouter();
+  const { toast } = useToast();
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -37,7 +39,15 @@ export default function Login() {
         email,
         password,
       });
-      if (error) return console.log("unable to login :", error);
+      if (error)
+        return toast({
+          variant: "destructive",
+          title: "Access Denied",
+          description: error.message,
+        });
+      toast({
+        description: "Login successfull",
+      });
       return router.push("/");
     } catch (error) {
       console.log(error);
