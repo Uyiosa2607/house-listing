@@ -1,278 +1,285 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import {useRouter} from "next/navigation";
-import {createClient} from "@/utils/supabase/client";
-import {useState, useEffect} from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
+import { useState, useEffect } from "react";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
-import {Button} from "@/components/ui/button";
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-    Bed,
-    Bath,
-    DollarSign,
-    MapPin,
-    Phone,
-    Mail,
-    ArrowLeft,
-    ChevronLeft,
-    ChevronRight,
-    Loader,
+  Bed,
+  Bath,
+  DollarSign,
+  MapPin,
+  Phone,
+  Mail,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Loader,
 } from "lucide-react";
-import {Dialog, DialogContent, DialogTitle, DialogTrigger} from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface Listing {
+  id: string;
+  title: string;
+  price: number;
+  bedrooms: number;
+  bathrooms: number;
+  squareFeet: number;
+  description: string;
+  img: string[];
+  author_id: string;
+  location: string;
+  realtor: {
     id: string;
-    title: string;
-    price: number;
-    bedrooms: number;
-    bathrooms: number;
-    squareFeet: number;
-    description: string;
-    img: string[];
-    author_id: string;
-    location: string;
-    realtor: {
-        id: string;
-        name: string;
-        phone: string;
-        email: string;
-        img: string;
-    };
+    name: string;
+    phone: string;
+    email: string;
+    img: string;
+  };
 }
 
 interface Author {
-    name: string;
-    img: string;
-    phone: string;
-    email: string;
+  name: string;
+  img: string;
+  phone: string;
+  email: string;
 }
 
 export default function ListingDetails({
-                                           params,
-                                       }: {
-    params: {
-        id: string;
-    };
+  params,
+}: {
+  params: {
+    id: string;
+  };
 }) {
-    const {id} = params;
+  const { id } = params;
 
-    const router = useRouter();
+  const router = useRouter();
 
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [listing, setListing] = useState<Listing | null>(null);
-    const [author, setAuthor] = useState<Author | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [listing, setListing] = useState<Listing | null>(null);
+  const [author, setAuthor] = useState<Author | null>(null);
 
-    // const [imageOpen, setImageOPen] = useState<boolean>(false)
+  // const [imageOpen, setImageOPen] = useState<boolean>(false)
 
-    async function getRealtor(id: string) {
-        const supabase = createClient();
-        try {
-            const {error, data} = await supabase
-                .from("users")
-                .select("*")
-                .eq("id", id);
-            if (!error) {
-                setAuthor(data[0]);
-                return;
-            }
-            return console.log("error fetching author:", error);
-        } catch (error) {
-            console.log("an error occured:", error);
-        }
+  async function getRealtor(id: string) {
+    const supabase = createClient();
+    try {
+      const { error, data } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", id);
+      if (!error) {
+        setAuthor(data[0]);
+        return;
+      }
+      return console.log("error fetching author:", error);
+    } catch (error) {
+      console.log("an error occured:", error);
     }
+  }
 
-    async function getListing(id: string) {
-        const supabase = createClient();
+  async function getListing(id: string) {
+    const supabase = createClient();
 
-        try {
-            const {error, data} = await supabase
-                .from("listing")
-                .select("*")
-                .eq("id", id);
-            if (!error) {
-                setListing(data[0]);
-                getRealtor(data[0].author_id);
-            }
-        } catch (error) {
-            console.log("An error occurred trying to fetch data:", error);
-        }
+    try {
+      const { error, data } = await supabase
+        .from("listing")
+        .select("*")
+        .eq("id", id);
+      if (!error) {
+        setListing(data[0]);
+        getRealtor(data[0].author_id);
+      }
+    } catch (error) {
+      console.log("An error occurred trying to fetch data:", error);
     }
+  }
 
-    useEffect(() => {
-        getListing(id);
-    }, [id]);
-    const nextImage = () => {
-        if (listing) {
-            setCurrentImageIndex((prevIndex) =>
-                prevIndex === listing.img.length - 1 ? 0 : prevIndex + 1
-            );
-        }
-    };
-
-    const prevImage = () => {
-        if (listing) {
-            setCurrentImageIndex((prevIndex) =>
-                prevIndex === 0 ? listing.img.length - 1 : prevIndex - 1
-            );
-        }
-    };
-
-    if (!listing) {
-        return (
-            <main className="min-w-screen min-h-screen flex items-center justify-center">
-                <Loader className="w-10 h-10 animate-spin"/>
-            </main>
-        );
+  useEffect(() => {
+    getListing(id);
+  }, [id]);
+  const nextImage = () => {
+    if (listing) {
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === listing.img.length - 1 ? 0 : prevIndex + 1
+      );
     }
+  };
 
+  const prevImage = () => {
+    if (listing) {
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === 0 ? listing.img.length - 1 : prevIndex - 1
+      );
+    }
+  };
+
+  if (!listing) {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-4">
-            <div className="max-w-4xl mx-auto space-y-8">
-                <div className="flex pt-5 items-center justify-between">
-                    <p
-                        onClick={() => router.back()}
-                        className="flex text-sm flex-1 items-center text-blue-500 hover:underline cursor-pointer"
-                    >
-                        <ArrowLeft className="h-4 text-base font-semibold w-4 mr-2"/>
-                        Back to Listings
-                    </p>
-                    <h1 className="text-sm w-[80%] justify-end pr-1 flex truncate capitalize font-medium flex-1 text-center">{listing.title}</h1>
-                </div>
-
-                <Dialog>
-                    <div className="relative mx-auto">
-
-                        <DialogTrigger asChild>
-                            <img
-                                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${listing.img[currentImageIndex]}`}
-                                alt={`Listing image ${currentImageIndex + 1}`}
-                                className="min-w-full  h-auto object-cover rounded-lg"
-                            />
-                        </DialogTrigger>
-
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            className="absolute left-2 top-1/2 transform -translate-y-1/2"
-                            onClick={prevImage}
-                        >
-                            <ChevronLeft className="h-4 w-4"/>
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                            onClick={nextImage}
-                        >
-                            <ChevronRight className="h-4 w-4"/>
-                        </Button>
-                        <div
-                            className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
-                            {currentImageIndex + 1} / {listing.img.length}
-                        </div>
-                    </div>
-                    <DialogContent className="p-2">
-                        <DialogTitle></DialogTitle>
-                        <img
-                            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${listing.img[currentImageIndex]}`}
-                            alt={`Listing image ${currentImageIndex + 1}`}
-                            className="w-full h-auto object-contain"
-                        />
-                    </DialogContent>
-                </Dialog>
-
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-center pb-2">
-                            <Bed className="h-4 w-4 mr-2"/>
-                            <CardTitle>{listing.bedrooms}</CardTitle>
-                        </CardHeader>
-                        <CardDescription>Bedrooms</CardDescription>
-                    </Card>
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-center pb-2">
-                            <Bath className="h-4 w-4 mr-2"/>
-                            <CardTitle>{listing.bathrooms}</CardTitle>
-                        </CardHeader>
-                        <CardDescription>Bathrooms</CardDescription>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-center pb-2">
-                            <DollarSign className="h-4 w-4 mr-2"/>
-                            <CardTitle>{listing.price}</CardTitle>
-                        </CardHeader>
-                        <CardDescription>Per Month</CardDescription>
-                    </Card>
-                </div>
-
-                <Tabs defaultValue="description">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="description">Description</TabsTrigger>
-                        <TabsTrigger value="location">Location</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="description" className="mt-2">
-                        <Card>
-                            <CardHeader className="p-3">
-                                <CardTitle className="text-base font-semibold">About this property</CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-3">
-                                <p className="text-sm">{listing.description}</p>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                    <TabsContent value="location" className="mt-4">
-                        <Card>
-                            <CardHeader className="p-3">
-                                <CardTitle className="text-base">Location</CardTitle>
-                            </CardHeader>
-                            <CardContent className="flex items-center">
-                                <MapPin className="h-5 w-5 mr-2 flex-shrink-0"/>
-                                <p>{listing.location}</p>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                </Tabs>
-
-                <Card>
-                    <CardHeader className="p-3">
-                        <CardTitle className="text-base">Contact Realtor</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex py-2 gap-2 items-center">
-                        <img
-                            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${author?.img}`}
-                            alt={author?.name}
-                            className="w-12 h-12 rounded-full object-cover"
-                        />
-                        <div className="mt-3">
-                            <h3 className="font-semibold text-sm">{author?.name}</h3>
-                            <p className="flex text-xs items-center mt-1">
-                                <Phone className="h-2 w-2 text-sm mr-1"/>
-                                {author?.phone}
-                            </p>
-                            <div className="flex items-center mt-1">
-                                <Mail className="h-2 w-2 mr-1"/>
-                                <span className="text-sm">{author?.email}</span>
-                            </div>
-                        </div>
-                    </CardContent>
-                    <CardFooter className="p-2 pb-6">
-                        <Button className="bg-green-700 text-white"
-                                onClick={() => window.open(`mailto:${author?.email}`, "_blank")}
-                        >
-                            Email Realtor
-                        </Button>
-                    </CardFooter>
-                </Card>
-            </div>
-        </div>
+      <main className="min-w-screen min-h-screen flex items-center justify-center">
+        <Loader className="w-10 h-10 animate-spin" />
+      </main>
     );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-4">
+      <div className="max-w-4xl mx-auto space-y-4">
+        <div className="flex pt-3 items-center justify-between">
+          <p
+            onClick={() => router.back()}
+            className="flex text-sm flex-1 items-center text-blue-500 hover:underline cursor-pointer"
+          >
+            <ArrowLeft className="h-4 text-base font-semibold w-4 mr-2" />
+            Back to Listings
+          </p>
+          <h1 className="text-sm w-[80%] justify-end pr-1 flex truncate capitalize font-medium flex-1 text-center">
+            {listing.title}
+          </h1>
+        </div>
+
+        <Dialog>
+          <div className="relative mx-auto">
+            <DialogTrigger asChild>
+              <img
+                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${listing.img[currentImageIndex]}`}
+                alt={`Listing image ${currentImageIndex + 1}`}
+                className="min-w-full  h-auto object-cover rounded-lg"
+              />
+            </DialogTrigger>
+
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2"
+              onClick={prevImage}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2"
+              onClick={nextImage}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
+              {currentImageIndex + 1} / {listing.img.length}
+            </div>
+          </div>
+          <DialogContent className="p-2">
+            <DialogTitle></DialogTitle>
+            <img
+              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${listing.img[currentImageIndex]}`}
+              alt={`Listing image ${currentImageIndex + 1}`}
+              className="w-full h-auto object-contain"
+            />
+          </DialogContent>
+        </Dialog>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+          <Card className="p-2">
+            <CardHeader className="flex p-2 flex-row items-center justify-center pb-2">
+              <Bed className="h-4 w-4 mr-2" />
+              <CardTitle>{listing.bedrooms}</CardTitle>
+            </CardHeader>
+            <CardDescription>Bedrooms</CardDescription>
+          </Card>
+          <Card className="p-2">
+            <CardHeader className="flex p-2 flex-row items-center justify-center pb-2">
+              <Bath className="h-4 w-4 mr-2" />
+              <CardTitle>{listing.bathrooms}</CardTitle>
+            </CardHeader>
+            <CardDescription>Bathrooms</CardDescription>
+          </Card>
+
+          <Card className="p-2">
+            <CardHeader className="flex flex-row p-2 items-center justify-center pb-2">
+              <DollarSign className="h-4 w-4 mr-2" />
+              <CardTitle>{listing.price}</CardTitle>
+            </CardHeader>
+            <CardDescription>Per Month</CardDescription>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="description">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="description">Description</TabsTrigger>
+            <TabsTrigger value="location">Location</TabsTrigger>
+          </TabsList>
+          <TabsContent value="description" className="mt-2">
+            <Card className="p-2">
+              <CardHeader className="p-2">
+                <CardTitle className="text-base font-semibold">
+                  About this property
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-2">
+                <p className="text-sm">{listing.description}</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="location" className="mt-2">
+            <Card>
+              <CardHeader className="p-2">
+                <CardTitle className="text-base">Location</CardTitle>
+              </CardHeader>
+              <CardContent className="flex items-center">
+                <MapPin className="h-5 w-5 mr-2 flex-shrink-0" />
+                <p>{listing.location}</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        <Card>
+          <CardHeader className="p-3">
+            <CardTitle className="text-base">Contact Realtor</CardTitle>
+          </CardHeader>
+          <CardContent className="flex py-2 gap-2 items-center">
+            <img
+              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${author?.img}`}
+              alt={author?.name}
+              className="w-12 h-12 rounded-full object-cover"
+            />
+            <div className="mt-3">
+              <h3 className="font-semibold text-sm">{author?.name}</h3>
+              <p className="flex text-xs items-center mt-1">
+                <Phone className="h-2 w-2 text-sm mr-1" />
+                {author?.phone}
+              </p>
+              <div className="flex items-center mt-1">
+                <Mail className="h-2 w-2 mr-1" />
+                <span className="text-sm">{author?.email}</span>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="p-2 pb-6">
+            <Button
+              className="bg-green-700 text-white"
+              onClick={() => window.open(`mailto:${author?.email}`, "_blank")}
+            >
+              Email Realtor
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
+  );
 }
