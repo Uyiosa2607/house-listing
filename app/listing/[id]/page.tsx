@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useState, useEffect } from "react";
+import { redirect } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -111,6 +112,16 @@ export default function ListingDetails({
   }
 
   useEffect(() => {
+    async function getAuthStatus() {
+      const supabase = createClient();
+      try {
+        const { error } = await supabase.auth.getUser();
+        if (error) return router.push("/login");
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    getAuthStatus();
     getListing(id);
   }, [id]);
   const nextImage = () => {
@@ -132,7 +143,7 @@ export default function ListingDetails({
   if (!listing) {
     return (
       <main className="min-w-screen min-h-screen flex items-center justify-center">
-        <Loader className="w-10 h-10 animate-spin" />
+        <Loader className="w-7 h-7 animate-spin" />
       </main>
     );
   }
