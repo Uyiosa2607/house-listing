@@ -148,10 +148,12 @@ export default function Home() {
                       alt={listing.title}
                       className="h-48 w-full object-cover"
                     />
-                    <CardHeader>
-                      <CardTitle>{listing.title}</CardTitle>
+                    <CardHeader className="p-2">
+                      <CardTitle className="text-base">
+                        {listing.title}
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-2">
                       <p className="text-sm text-gray-500 line-clamp-2">
                         {listing.description}
                       </p>
@@ -167,13 +169,15 @@ export default function Home() {
                         <div className="flex items-center">
                           <DollarSign className="h-4 w-4 mr-1" />
                           <span className="text-sm font-bold">
-                            {listing.price}/mo
+                            {listing.price}/Yr
                           </span>
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter className="mt-auto">
-                      <Button className="w-full">View Details</Button>
+                    <CardFooter className="mt-auto p-2">
+                      <Button size={"sm"} className="w-full">
+                        View Details
+                      </Button>
                     </CardFooter>
                   </Card>
                 </Link>
