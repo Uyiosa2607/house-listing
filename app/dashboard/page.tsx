@@ -349,10 +349,10 @@ export default function UserDashboard() {
               <CardHeader>
                 <div className="flex justify-between">
                   <div>
-                    <CardTitle className="text-2xl font-bold">
+                    <CardTitle className="text-lg font-semibold">
                       User Dashboard
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-xs">
                       Manage your profile and listings
                     </CardDescription>
                   </div>
@@ -367,7 +367,7 @@ export default function UserDashboard() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center space-x-4">
-                  <Avatar className="w-20 h-20">
+                  <Avatar className="w-16 h-16">
                     <AvatarImage
                       src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${userInfo?.img}`}
                     />
@@ -379,21 +379,26 @@ export default function UserDashboard() {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h2 className="text-xl font-semibold">{userInfo?.name}</h2>
+                    <h2 className="text-lg font-semibold">{userInfo?.name}</h2>
                     <p className="text-sm text-gray-500">{userInfo?.email}</p>
                   </div>
                 </div>
                 <Dialog>
                   <div className="flex  items-center justify-between">
                     <DialogTrigger asChild>
-                      <Button>Update Profile</Button>
+                      <Button size={"sm"}>Update Profile</Button>
                     </DialogTrigger>
                     <Button
+                      size={"sm"}
                       className="bg-blue-900 text-white"
                       onClick={() => router.push("/")}
                     >
                       {" "}
-                      <Home size={15} className="ml-1" /> All Listings{" "}
+                      <Home
+                        size={14}
+                        className="mr-1 font-normal text-sm"
+                      />{" "}
+                      All Listings{" "}
                     </Button>
                   </div>
                   <DialogContent>
@@ -451,25 +456,27 @@ export default function UserDashboard() {
 
             {listings ? (
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold">
+                <CardHeader className="p-2">
+                  <CardTitle className="text-base text-center font-bold">
                     Your Listings
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-2">
                   <div className="space-y-4">
                     {listings.map((listing) => (
-                      <Card key={listing.id}>
-                        <CardHeader>
-                          <CardTitle>{listing.title}</CardTitle>
-                          <CardDescription>
+                      <Card className="p-2" key={listing.id}>
+                        <CardHeader className="p-2">
+                          <CardTitle className="text-sm">
+                            {listing.title}
+                          </CardTitle>
+                          <CardDescription className="text-sm">
                             {listing.status} - ${listing.price}/month
                           </CardDescription>
                         </CardHeader>
-                        <CardContent>
-                          <div className="flex flex-wrap gap-2 mb-4">
+                        <CardContent className="p-2">
+                          <div className="flex justify-between flex-wrap gap-2 mb-4">
                             {listing.img.map((image, index) => (
-                              <div key={index} className="relative w-24 h-24">
+                              <div key={index} className="relative w-20 h-20">
                                 <img
                                   src={`${process.env
                                     .NEXT_PUBLIC_SUPABASE_URL!}/storage/v1/object/public/storage/${image}`}
@@ -479,16 +486,17 @@ export default function UserDashboard() {
                               </div>
                             ))}
                           </div>
-                          <p>{listing.description}</p>
-                          <p className="mt-2">
+                          <p className="text-sm">{listing.description}</p>
+                          <p className="mt-2 text-sm">
                             Bedrooms: {listing.bedrooms}, Bathrooms:{" "}
                             {listing.bathrooms}
                           </p>
                         </CardContent>
-                        <CardFooter className="flex justify-end space-x-2">
+                        <CardFooter className="flex p-2 mt-4 justify-end space-x-2">
                           <Dialog>
                             <DialogTrigger asChild>
                               <Button
+                                size={"sm"}
                                 variant="outline"
                                 onClick={() => setEditingListing(listing)}
                               >
@@ -628,6 +636,7 @@ export default function UserDashboard() {
                             </DialogContent>
                           </Dialog>
                           <Button
+                            size={"sm"}
                             variant="destructive"
                             onClick={() => deleteListing(listing.id)}
                           >

@@ -241,8 +241,8 @@ export default function ListingDetails({
                 <CardTitle className="text-base">Location</CardTitle>
               </CardHeader>
               <CardContent className="flex items-center">
-                <MapPin className="h-5 w-5 mr-2 flex-shrink-0" />
-                <p>{listing.location}</p>
+                <MapPin className="h-3 w-3 mr-2 flex-shrink-0" />
+                <p className="text-sm">{listing.location}</p>
               </CardContent>
             </Card>
           </TabsContent>
