@@ -167,7 +167,6 @@ export default function UserDashboard() {
         .order("created_at", { ascending: false });
       if (error) return console.log(error);
       setListings(data);
-      console.log(data);
     } catch (error) {
       console.log("an error occurred while trying to fetch data:", error);
     }
@@ -478,13 +477,13 @@ export default function UserDashboard() {
                             {listing.img.map((image, index) => (
                               <div
                                 key={index}
-                                className="relative w-24 lg:w-[200px] lg:h-[140px] h-24"
+                                className="relative mb-1 w-20 lg:w-[200px] lg:h-[140px] h-20"
                               >
                                 <img
                                   src={`${process.env
                                     .NEXT_PUBLIC_SUPABASE_URL!}/storage/v1/object/public/storage/${image}`}
                                   alt={`${listing.title} - Image ${index + 1}`}
-                                  className="rounded-md w-[100px] lg:w-[200px] h-[100px] lg:h-[140px] object-cover"
+                                  className="rounded-md w-[100px] lg:w-[200px] h-[80px] lg:h-[140px] object-cover"
                                 />
                               </div>
                             ))}
