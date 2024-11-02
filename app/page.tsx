@@ -64,7 +64,6 @@ export default function Home() {
         .order("created_at", { ascending: false });
       if (error) return console.log(error);
       setListings(data);
-      console.log(data);
     } catch (error) {
       console.log("an error occurred while trying to fetch data:", error);
     } finally {
@@ -148,12 +147,12 @@ export default function Home() {
                       alt={listing.title}
                       className="h-48 w-full object-cover"
                     />
-                    <CardHeader className="p-2">
+                    <CardHeader className="p-2 pt-0">
                       <CardTitle className="text-base">
                         {listing.title}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-2">
+                    <CardContent className="p-2 pt-0">
                       <p className="text-sm text-gray-500 line-clamp-2">
                         {listing.description}
                       </p>
