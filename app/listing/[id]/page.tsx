@@ -111,16 +111,6 @@ export default function ListingDetails({
   }
 
   useEffect(() => {
-    async function getAuthStatus() {
-      const supabase = createClient();
-      try {
-        const { error } = await supabase.auth.getUser();
-        if (error) return router.push("/login");
-      } catch (error) {
-        console.log(error);
-      }
-    }
-    getAuthStatus();
     getListing(id);
   }, [id]);
   const nextImage = () => {
