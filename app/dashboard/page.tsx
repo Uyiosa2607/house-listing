@@ -470,18 +470,21 @@ export default function UserDashboard() {
                             {listing.title}
                           </CardTitle>
                           <CardDescription className="text-sm">
-                            {listing.status} - ${listing.price}/month
+                            {listing.status} - ${listing.price}/year
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="p-2">
-                          <div className="flex justify-between flex-wrap gap-2 mb-4">
+                        <CardContent className="p-2 px-1">
+                          <div className="flex flex-wrap gap-2 mb-4">
                             {listing.img.map((image, index) => (
-                              <div key={index} className="relative w-20 h-20">
+                              <div
+                                key={index}
+                                className="relative w-24 lg:w-[200px] lg:h-[140px] h-24"
+                              >
                                 <img
                                   src={`${process.env
                                     .NEXT_PUBLIC_SUPABASE_URL!}/storage/v1/object/public/storage/${image}`}
                                   alt={`${listing.title} - Image ${index + 1}`}
-                                  className="rounded-md w-[80px] h-[80px] md:h-[100px] md:w-[100px] object-cover"
+                                  className="rounded-md w-[100px] lg:w-[200px] h-[100px] lg:h-[140px] object-cover"
                                 />
                               </div>
                             ))}
