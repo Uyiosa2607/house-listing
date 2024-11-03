@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { useStore } from "@/utils/store";
 import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
-import Login from "../login/page";
 import imageCompression from "browser-image-compression";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
