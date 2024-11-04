@@ -35,7 +35,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Home, Loader, LogOut } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Home,
+  Loader,
+  LogOut,
+  Loader2,
+} from "lucide-react";
 
 type Listing = {
   id: string;
@@ -52,6 +60,7 @@ type Listing = {
 export default function UserDashboard() {
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
+  const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
 
   const { fetchUser, userInfo, loading } = useStore();
 
@@ -101,6 +110,7 @@ export default function UserDashboard() {
   async function deleteListing(id: string) {
     const supabase = createClient();
     try {
+      setDeleteLoading(true);
       const listingToDelete = await supabase
         .from("listing")
         .select("*")
@@ -116,10 +126,6 @@ export default function UserDashboard() {
           variant: "destructive",
           description: "error occurred trying to delete listing",
         });
-      if (listingToDelete.data[0]?.img < 1)
-        return toast({
-          description: "listing has been deleted",
-        });
       const deleteListingImages = await supabase.storage
         .from("storage")
         .remove(listingToDelete?.data[0]?.img);
@@ -129,7 +135,13 @@ export default function UserDashboard() {
         description: "listing has been deleted",
       });
     } catch (error) {
-      console.log("error occurred while deleting listing:", error);
+      console.log(error);
+      return toast({
+        variant: "destructive",
+        description: "an error occurred, please try again",
+      });
+    } finally {
+      setDeleteLoading(false);
     }
   }
 
@@ -401,11 +413,15 @@ export default function UserDashboard() {
                           </DialogContent>
                         </Dialog>
                         <Button
+                          disabled={deleteLoading}
                           size={"sm"}
                           variant="destructive"
                           onClick={() => deleteListing(listing.id)}
                         >
-                          <Trash2 className="w-4 h-4 mr-2" /> Delete
+                          <Trash2 className="w-4 h-4 mr-2" /> Delete{" "}
+                          {deleteLoading ? (
+                            <Loader2 className="w-3 animate-spin ml-1 h-3" />
+                          ) : null}
                         </Button>
                       </CardFooter>
                     </Card>
