@@ -4,8 +4,6 @@
 import { useState, useEffect } from "react";
 import { useStore } from "@/utils/store";
 import { createClient } from "@/utils/supabase/client";
-import Image from "next/image";
-import imageCompression from "browser-image-compression";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,17 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Home,
-  Upload,
-  X,
-  Loader2,
-  Loader,
-  LogOut,
-} from "lucide-react";
+import { Plus, Pencil, Trash2, Home, Loader, LogOut } from "lucide-react";
 
 type Listing = {
   id: string;
@@ -60,98 +48,12 @@ type Listing = {
   location: string;
 };
 
-function ImagePreview({
-  images,
-  onRemove,
-  maxImages = 4,
-}: {
-  images: File[];
-  onRemove: (index: number) => void;
-  maxImages?: number;
-}) {
-  const [previews, setPreviews] = useState<string[]>([]);
-
-  useEffect(() => {
-    const newPreviews = images
-      .slice(0, maxImages)
-      .map((file) => URL.createObjectURL(file));
-    setPreviews(newPreviews);
-
-    return () => {
-      newPreviews.forEach(URL.revokeObjectURL);
-    };
-  }, [images, maxImages]);
-
-  return (
-    <div className="flex flex-wrap gap-2 mt-2">
-      {previews.map((preview, index) => (
-        <div key={preview} className="relative w-16 h-16">
-          <Image
-            src={preview}
-            alt={`Preview ${index + 1}`}
-            layout="fill"
-            objectFit="cover"
-            className="rounded-md"
-          />
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            className="absolute top-0 right-0 h-6 w-6"
-            onClick={() => onRemove(index)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function StyledImagePicker({
-  onChange,
-  multiple = true,
-  accept = "image/*",
-}: {
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  multiple?: boolean;
-  accept?: string;
-}) {
-  return (
-    <div className="flex items-center justify-center w-full">
-      <label
-        htmlFor="dropzone-file"
-        className="flex flex-col items-center justify-center w-full h-18 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600"
-      >
-        <div className="flex flex-col items-center justify-center pt-2 pb-2">
-          <Upload className="w-4 h-4 mb-2 text-gray-400" />
-          <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">
-            <span className="font-semibold">Click to upload</span> or drag and
-            drop
-          </p>
-        </div>
-        <input
-          id="dropzone-file"
-          type="file"
-          className="hidden"
-          onChange={onChange}
-          multiple={multiple}
-          accept={accept}
-        />
-      </label>
-    </div>
-  );
-}
-
 export default function UserDashboard() {
-  const [status, setStatus] = useState<string>("available");
-  const [pickedImages, setPickedImages] = useState<File[]>([]);
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
-  const [newListingImages, setNewListingImages] = useState<File[]>([]);
-  const [listingLoading, setListingLoading] = useState<boolean>(false);
   const [listings, setListings] = useState<Listing[]>([]);
+  const [pickedImages, setPickedImages] = useState<File[]>([]);
 
-  const { fetchUser, userInfo, auth, loading } = useStore();
+  const { fetchUser, userInfo, loading } = useStore();
 
   const router = useRouter();
 
@@ -174,7 +76,6 @@ export default function UserDashboard() {
   useEffect(() => {
     if (userInfo?.role !== "admin") return router.push("/");
     fetchUser();
-
     getListing();
   }, [fetchUser]);
 
@@ -188,17 +89,24 @@ export default function UserDashboard() {
     }
   };
 
-  const handleNewListingImages = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const imageFiles = event.target.files;
-    if (imageFiles) {
-      const filesArray = Array.from(imageFiles);
-      setNewListingImages((prevImages) =>
-        [...prevImages, ...filesArray].slice(0, 4)
-      );
-    }
+  const handleEditListing = (updatedListing: Listing) => {
+    setListings(
+      listings.map((listing) =>
+        listing.id === updatedListing.id ? updatedListing : listing
+      )
+    );
+    setEditingListing(null);
   };
+
+  async function handleLogout() {
+    const supabase = createClient();
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (!error) return router.push("/login");
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   async function deleteListing(id: string) {
     const supabase = createClient();
@@ -224,110 +132,6 @@ export default function UserDashboard() {
         return console.log("error deleting images:", deleteListingImages.error);
     } catch (error) {
       console.log("error occurred while deleting listing:", error);
-    }
-  }
-
-  async function uploadImagesToSupabase(imageFiles: File[]): Promise<string[]> {
-    const supabase = createClient();
-    const imagePaths: string[] = [];
-    for (const file of imageFiles) {
-      const options = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 800,
-        useWebWorker: true,
-      };
-
-      try {
-        const compressedFile = await imageCompression(file, options);
-
-        const { data, error } = await supabase.storage
-          .from("storage")
-          .upload(`images/${compressedFile.name}`, compressedFile, {
-            cacheControl: "3600",
-            upsert: true,
-          });
-
-        if (error) {
-          console.error("Error uploading image:", error.message);
-          continue;
-        }
-
-        if (data?.path) {
-          imagePaths.push(data.path);
-        }
-      } catch (compressionError) {
-        console.error(
-          "Error compressing image:",
-          (compressionError as Error).message
-        );
-      }
-    }
-
-    return imagePaths;
-  }
-
-  async function handleAddListing(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const supabase = createClient();
-    const formData = new FormData(event.currentTarget);
-    const title = formData.get("title") as string;
-    const bathrooms = Number(formData.get("bathrooms"));
-    const bedrooms = Number(formData.get("bedrooms"));
-    const price = Number(formData.get("price"));
-    const description = formData.get("description") as string;
-    const location = formData.get("location") as string;
-
-    try {
-      setListingLoading(true);
-      const uploadedImages = await uploadImagesToSupabase(newListingImages);
-      if (uploadedImages.length < 1)
-        return console.log("error uploading images");
-      const { data, error } = await supabase
-        .from("listing")
-        .insert([
-          {
-            author_id: userInfo?.id,
-            title,
-            status,
-            bedrooms,
-            bathrooms,
-            price,
-            description,
-            location,
-            img: uploadedImages,
-          },
-        ])
-        .select("*");
-
-      if (error) {
-        console.log("Error saving item to the database:", error.message);
-        return;
-      }
-
-      console.log(data, "Listing added successfully");
-    } catch (error) {
-      console.log("Unexpected error:", (error as Error).message);
-    } finally {
-      setListingLoading(false);
-    }
-  }
-
-  const handleEditListing = (updatedListing: Listing) => {
-    setListings(
-      listings.map((listing) =>
-        listing.id === updatedListing.id ? updatedListing : listing
-      )
-    );
-    setEditingListing(null);
-  };
-
-  async function handleLogout() {
-    const supabase = createClient();
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (!error) return router.push("/login");
-    } catch (error) {
-      console.log(error);
     }
   }
 
@@ -601,7 +405,7 @@ export default function UserDashboard() {
                                     />
                                   </div>
                                 </div>
-                                <div className="space-y-2">
+                                {/* <div className="space-y-2">
                                   <Label htmlFor="images">
                                     Listing Images (Max 4)
                                   </Label>
@@ -614,7 +418,7 @@ export default function UserDashboard() {
                                       )
                                     }
                                   />
-                                </div>
+                                </div> */}
                               </div>
                               <DialogFooter className="mt-4">
                                 <Button type="submit">Save changes</Button>
@@ -635,112 +439,12 @@ export default function UserDashboard() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button className="w-full">
-                      <Plus className="w-4 h-4 mr-2" /> Add New Listing
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="overflow-y-scroll">
-                    <DialogHeader>
-                      <DialogTitle>Add New Listing</DialogTitle>
-                    </DialogHeader>
-                    <form
-                      className="overflow-y-scroll"
-                      onSubmit={handleAddListing}
-                    >
-                      <div className="space-y-4 overflow-y-scroll">
-                        <div className="space-y-2">
-                          <Label htmlFor="new-title">Title</Label>
-                          <Input id="new-title" name="title" required />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="new-status">Status</Label>
-                          <Select
-                            onValueChange={(value) => setStatus(value)}
-                            name="status"
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="available">
-                                Available
-                              </SelectItem>
-                              <SelectItem value="rented">Rented</SelectItem>
-                              <SelectItem value="sold">Sold</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="new-price">Price</Label>
-                          <Input
-                            id="new-price"
-                            name="price"
-                            type="number"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="new-description">Description</Label>
-                          <Input
-                            id="new-description"
-                            name="description"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="location">Location</Label>
-                          <Input id="location" name="location" required />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="new-bedrooms">Bedrooms</Label>
-                            <Input
-                              id="new-bedrooms"
-                              name="bedrooms"
-                              type="number"
-                              required
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="new-bathrooms">Bathrooms</Label>
-                            <Input
-                              id="new-bathrooms"
-                              name="bathrooms"
-                              type="number"
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="new-images">
-                            Listing Images (Max 4)
-                          </Label>
-                          <StyledImagePicker
-                            onChange={handleNewListingImages}
-                          />
-                          <ImagePreview
-                            images={newListingImages}
-                            onRemove={(index) =>
-                              setNewListingImages((images) =>
-                                images.filter((_, i) => i !== index)
-                              )
-                            }
-                          />
-                        </div>
-                      </div>
-                      <DialogFooter className="mt-4">
-                        <Button disabled={listingLoading} type="submit">
-                          Add Listing{" "}
-                          {listingLoading ? (
-                            <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                          ) : null}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                <Button
+                  onClick={() => router.push("/dashboard/add-listing")}
+                  className="w-full"
+                >
+                  <Plus className="w-4 h-4 mr-2" /> Add New Listing
+                </Button>
               </CardFooter>
             </Card>
           ) : (
