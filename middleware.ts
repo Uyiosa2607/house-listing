@@ -5,10 +5,13 @@ import { createClient } from "./utils/supabase/server";
 export async function middleware(request: NextRequest) {
   const supabase = createClient();
   const { data: authData } = await supabase.auth.getUser();
-  const userData = await supabase
-    .from("users")
-    .select("*")
-    .eq("id", authData?.user?.id);
+
+  //Removed for performance issues
+
+  // const userData = await supabase
+  //   .from("users")
+  //   .select("*")
+  //   .eq("id", authData?.user?.id);
 
   const authID = authData?.user?.id;
   if (!authID) {
