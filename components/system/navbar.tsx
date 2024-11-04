@@ -15,6 +15,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import imageCompression from "browser-image-compression";
 import Image from "next/image";
+import Link from "next/link";
 
 type Avatar = {
   url: string;
@@ -248,14 +249,15 @@ export default function Navbar() {
                 </DialogContent>
               </Dialog>
               {userInfo?.role === "admin" ? (
-                <Button
-                  size={"sm"}
-                  onClick={() => router.push("/dashboard")}
-                  className="w-full font-medium text-sm text-center py-2"
-                >
-                  {" "}
-                  Dashboard <UserRoundCog size={14} className="ml-2" />
-                </Button>
+                <Link href="/dashboard">
+                  <Button
+                    size={"sm"}
+                    className="w-full font-medium text-sm text-center py-2"
+                  >
+                    {" "}
+                    Dashboard <UserRoundCog size={14} className="ml-2" />
+                  </Button>
+                </Link>
               ) : null}
             </CardContent>
           </Card>

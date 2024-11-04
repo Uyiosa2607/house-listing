@@ -44,6 +44,7 @@ import {
   LogOut,
   Loader2,
 } from "lucide-react";
+import Link from "next/link";
 
 type Listing = {
   id: string;
@@ -85,7 +86,7 @@ export default function UserDashboard() {
 
   useEffect(() => {
     fetchUser();
-    if (userInfo?.role !== "admin") return router.push("/");
+    // if (userInfo?.role !== "admin") return router.push("/");
     getListing();
   }, [fetchUser]);
 
@@ -200,15 +201,16 @@ export default function UserDashboard() {
                   <DialogTrigger asChild>
                     <Button size={"sm"}>Update Profile</Button>
                   </DialogTrigger>
-                  <Button
-                    size={"sm"}
-                    className="bg-blue-900 text-white"
-                    onClick={() => router.push("/")}
-                  >
-                    {" "}
-                    <Home size={14} className="mr-1 font-normal text-sm" /> All
-                    Listings{" "}
-                  </Button>
+                  <Link href="/">
+                    <Button size={"sm"} className="bg-blue-900 text-white">
+                      {" "}
+                      <Home
+                        size={14}
+                        className="mr-1 font-normal text-sm"
+                      />{" "}
+                      All Listings{" "}
+                    </Button>
+                  </Link>
                 </div>
                 <DialogContent>
                   <DialogHeader>
@@ -430,12 +432,11 @@ export default function UserDashboard() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button
-                  onClick={() => router.push("/dashboard/add-listing")}
-                  className="w-full"
-                >
-                  <Plus className="w-4 h-4 mr-2" /> Add New Listing
-                </Button>
+                <Link href="/dashboard/add-listing">
+                  <Button className="w-full">
+                    <Plus className="w-4 h-4 mr-2" /> Add New Listing
+                  </Button>
+                </Link>
               </CardFooter>
             </Card>
           ) : (

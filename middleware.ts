@@ -8,10 +8,10 @@ export async function middleware(request: NextRequest) {
 
   //Removed for performance issues
 
-  // const userData = await supabase
-  //   .from("users")
-  //   .select("*")
-  //   .eq("id", authData?.user?.id);
+  const userData = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", authData?.user?.id);
 
   const authID = authData?.user?.id;
   if (!authID) {
@@ -20,18 +20,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  //temporarily removed for performance issues!!
+  // temporarily removed for performance issues!!
 
-  // const path = request.nextUrl.pathname;
-  // const userRole = userData?.data?.[0].role;
+  const path = request.nextUrl.pathname;
+  const userRole = userData?.data?.[0].role;
 
-  // if (path === "/dashboard" || path === "/dashboard/add-listing") {
-  //   if (userRole !== "admin") {
-  //     const url = request.nextUrl.clone();
-  //     url.pathname = "/";
-  //     return NextResponse.redirect(url);
-  //   }
-  // }
+  if (path === "/dashboard" || path === "/dashboard/add-listing") {
+    if (userRole !== "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
+  }
 
   return await updateSession(request);
 }
