@@ -34,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Home, Loader, LogOut } from "lucide-react";
 
 type Listing = {
@@ -55,6 +56,7 @@ export default function UserDashboard() {
   const { fetchUser, userInfo, loading } = useStore();
 
   const router = useRouter();
+  const { toast } = useToast();
 
   async function getListing() {
     const supabase = createClient();
@@ -110,14 +112,22 @@ export default function UserDashboard() {
         .delete()
         .eq("id", listingToDelete?.data[0]?.id);
       if (error)
-        return console.log("error occurred trying to delete listing", error);
+        return toast({
+          variant: "destructive",
+          description: "error occurred trying to delete listing",
+        });
       if (listingToDelete.data[0]?.img < 1)
-        return console.log("listing deleted!");
+        return toast({
+          description: "listing has been deleted",
+        });
       const deleteListingImages = await supabase.storage
         .from("storage")
         .remove(listingToDelete?.data[0]?.img);
       if (deleteListingImages.error)
         return console.log("error deleting images:", deleteListingImages.error);
+      return toast({
+        description: "listing has been deleted",
+      });
     } catch (error) {
       console.log("error occurred while deleting listing:", error);
     }

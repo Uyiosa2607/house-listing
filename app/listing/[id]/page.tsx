@@ -275,7 +275,7 @@ export default function ListingDetails({
               className="bg-green-700 text-white"
               onClick={() => window.open(`mailto:${author?.email}`, "_blank")}
             >
-              Email Realtor
+              contact agent
             </Button>
           </CardFooter>
         </Card>

@@ -17,6 +17,7 @@ import {
 import Image from "next/image";
 import imageCompression from "browser-image-compression";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 function ImagePreview({
   images,
@@ -108,6 +109,7 @@ export default function AddListing() {
 
   const { userInfo, fetchUser } = useStore();
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchUser();
@@ -180,7 +182,7 @@ export default function AddListing() {
       const uploadedImages = await uploadImagesToSupabase(newListingImages);
       if (uploadedImages.length < 1)
         return console.log("error uploading images");
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("listing")
         .insert([
           {
@@ -198,11 +200,16 @@ export default function AddListing() {
         .select("*");
 
       if (error) {
-        console.log("Error saving item to the database:", error.message);
-        return;
+        return toast({
+          variant: "destructive",
+          description:
+            "unable to add listing! an error occured, please try again",
+        });
       }
 
-      console.log(data, "Listing added successfully");
+      return toast({
+        description: "Listing added succesfully",
+      });
     } catch (error) {
       console.log("Unexpected error:", (error as Error).message);
     } finally {
