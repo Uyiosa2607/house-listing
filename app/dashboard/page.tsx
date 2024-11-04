@@ -85,6 +85,7 @@ export default function UserDashboard() {
 
   useEffect(() => {
     fetchUser();
+    if (userInfo?.role !== "admin") return router.push("/");
     getListing();
   }, [fetchUser]);
 

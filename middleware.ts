@@ -17,16 +17,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  const path = request.nextUrl.pathname;
-  const userRole = userData?.data?.[0].role;
+  //temporarily removed for performance issues!!
 
-  if (path === "/dashboard" || path === "/dashboard/add-listing") {
-    if (userRole !== "admin") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/";
-      return NextResponse.redirect(url);
-    }
-  }
+  // const path = request.nextUrl.pathname;
+  // const userRole = userData?.data?.[0].role;
+
+  // if (path === "/dashboard" || path === "/dashboard/add-listing") {
+  //   if (userRole !== "admin") {
+  //     const url = request.nextUrl.clone();
+  //     url.pathname = "/";
+  //     return NextResponse.redirect(url);
+  //   }
+  // }
 
   return await updateSession(request);
 }
