@@ -232,7 +232,7 @@ export default function UserDashboard() {
                         <Label htmlFor="phone">Phone</Label>
                         <Input id="phone" name="phone" type="tel" required />
                       </div>
-                      <div className="space-y-2">
+                      {/* <div className="space-y-2">
                         <Label htmlFor="avatar">Profile Picture</Label>
                         <Input
                           id="avatar"
@@ -241,7 +241,7 @@ export default function UserDashboard() {
                           accept="image/*"
                           onChange={handleImages}
                         />
-                      </div>
+                      </div> */}
                     </div>
                     <DialogFooter className="mt-4">
                       <Button type="submit">Save changes</Button>
