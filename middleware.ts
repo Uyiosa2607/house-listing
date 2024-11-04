@@ -1,10 +1,14 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
 import { createClient } from "./utils/supabase/server";
 
 export async function middleware(request: NextRequest) {
   const supabase = createClient();
   const { data: authData } = await supabase.auth.getUser();
+  const userData = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", authData?.user?.id);
 
   const authID = authData?.user?.id;
   if (!authID) {
@@ -13,17 +17,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // const {data, error} = await supabase
-  //     .from("users")
-  //     .select("role")
-  //     .eq("id", authID)
-  //     .single();
+  const path = request.nextUrl.pathname;
+  const userRole = userData?.data?.[0].role;
 
-  // if (error || data?.role !== "admin") {
-  //     const url = request.nextUrl.clone();
-  //     url.pathname = "/";
-  //     return NextResponse.redirect(url);
-  // }
+  if (path === "/dashboard" || path === "/dashboard/add-listing") {
+    if (userRole !== "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
+  }
 
   return await updateSession(request);
 }

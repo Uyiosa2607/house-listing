@@ -51,7 +51,6 @@ type Listing = {
 export default function UserDashboard() {
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
-  // const [pickedImages, setPickedImages] = useState<File[]>([]);
 
   const { fetchUser, userInfo, loading } = useStore();
 
@@ -74,7 +73,6 @@ export default function UserDashboard() {
   }
 
   useEffect(() => {
-    if (userInfo?.role !== "admin") return router.push("/");
     fetchUser();
     getListing();
   }, [fetchUser]);
@@ -97,16 +95,6 @@ export default function UserDashboard() {
       console.log(error);
     }
   }
-
-  // const handleImages = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   const imageFiles = event.target.files;
-  //   if (imageFiles) {
-  //     const filesArray = Array.from(imageFiles);
-  //     setPickedImages((prevImages) =>
-  //       [...prevImages, ...filesArray].slice(0, 4)
-  //     );
-  //   }
-  // };
 
   async function deleteListing(id: string) {
     const supabase = createClient();
@@ -232,16 +220,6 @@ export default function UserDashboard() {
                         <Label htmlFor="phone">Phone</Label>
                         <Input id="phone" name="phone" type="tel" required />
                       </div>
-                      {/* <div className="space-y-2">
-                        <Label htmlFor="avatar">Profile Picture</Label>
-                        <Input
-                          id="avatar"
-                          name="avatar"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImages}
-                        />
-                      </div> */}
                     </div>
                     <DialogFooter className="mt-4">
                       <Button type="submit">Save changes</Button>
@@ -405,20 +383,6 @@ export default function UserDashboard() {
                                     />
                                   </div>
                                 </div>
-                                {/* <div className="space-y-2">
-                                  <Label htmlFor="images">
-                                    Listing Images (Max 4)
-                                  </Label>
-                                  <StyledImagePicker onChange={handleImages} />
-                                  <ImagePreview
-                                    images={pickedImages}
-                                    onRemove={(index) =>
-                                      setPickedImages((images) =>
-                                        images.filter((_, i) => i !== index)
-                                      )
-                                    }
-                                  />
-                                </div> */}
                               </div>
                               <DialogFooter className="mt-4">
                                 <Button type="submit">Save changes</Button>

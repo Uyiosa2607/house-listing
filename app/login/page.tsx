@@ -101,9 +101,9 @@ export default function Login() {
               />
             </div>
             {/* {error && <p className="text-red-500 text-sm">{error}</p>} */}
-            <Button type="submit" className="w-full">
+            <Button size="sm" type="submit" className="w-full">
               Login{" "}
-              {loading && <Loader2 className="ml-2 w-4 h-5 animate-spin" />}
+              {loading && <Loader2 className="ml-1 w-4 h-4 animate-spin" />}
             </Button>
           </form>
           <Link href="/register">

@@ -216,7 +216,7 @@ export default function AddListing() {
         <Button
           variant={"link"}
           size={"sm"}
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.back()}
           asChild
         >
           <div className="flex items-center gap-1">
