@@ -51,7 +51,7 @@ type Listing = {
 export default function UserDashboard() {
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
-  const [pickedImages, setPickedImages] = useState<File[]>([]);
+  // const [pickedImages, setPickedImages] = useState<File[]>([]);
 
   const { fetchUser, userInfo, loading } = useStore();
 
@@ -79,16 +79,6 @@ export default function UserDashboard() {
     getListing();
   }, [fetchUser]);
 
-  const handleImages = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const imageFiles = event.target.files;
-    if (imageFiles) {
-      const filesArray = Array.from(imageFiles);
-      setPickedImages((prevImages) =>
-        [...prevImages, ...filesArray].slice(0, 4)
-      );
-    }
-  };
-
   const handleEditListing = (updatedListing: Listing) => {
     setListings(
       listings.map((listing) =>
@@ -107,6 +97,16 @@ export default function UserDashboard() {
       console.log(error);
     }
   }
+
+  // const handleImages = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const imageFiles = event.target.files;
+  //   if (imageFiles) {
+  //     const filesArray = Array.from(imageFiles);
+  //     setPickedImages((prevImages) =>
+  //       [...prevImages, ...filesArray].slice(0, 4)
+  //     );
+  //   }
+  // };
 
   async function deleteListing(id: string) {
     const supabase = createClient();
