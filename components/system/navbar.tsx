@@ -23,11 +23,12 @@ type Avatar = {
 };
 
 export default function Navbar() {
-  const [editProFileLoading, setEditProfileLoading] = useState<boolean>(false);
+  const [editLoading, setEditLoading] = useState<boolean>(false);
   const [avatar, setAvatar] = useState<Avatar | null>({
     file: null,
     url: "",
   });
+
   const router = useRouter();
 
   async function signOut() {
@@ -40,7 +41,7 @@ export default function Navbar() {
     }
   }
 
-  const { userInfo, loading, fetchUser } = useStore();
+  const { userInfo, fetchUser, loading } = useStore();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -91,38 +92,59 @@ export default function Navbar() {
     const supabase = createClient();
     const formData = new FormData(e.currentTarget);
     const name = formData.get("name");
-    const email = formData.get("email");
+    const phone = formData.get("phone");
     try {
-      setEditProfileLoading(true);
-      const avatarURL = await UploadImage(avatar!);
-      if (avatarURL === null)
-        return toast({
-          variant: "destructive",
-          description: "unable to update profile details please try again",
+      setEditLoading(true);
+      if (avatar?.file === null) {
+        const { error } = await supabase
+          .from("users")
+          .update([
+            {
+              phone,
+              name,
+            },
+          ])
+          .eq("id", userInfo?.id);
+        if (error)
+          return toast({
+            variant: "destructive",
+            description: "an error occurred trying to update profile",
+          });
+        toast({
+          description: "Profile updated",
         });
-      const { error } = await supabase
-        .from("users")
-        .update([
-          {
-            email,
-            name,
-            img: avatarURL,
-          },
-        ])
-        .eq("id", userInfo?.id);
-      if (error)
-        return toast({
-          variant: "destructive",
-          description: "an error occurred trying to update profile",
+        return router.refresh();
+      } else {
+        const avatarURL = await UploadImage(avatar!);
+        if (avatarURL === null)
+          return toast({
+            variant: "destructive",
+            description: "unable to update profile details please try again",
+          });
+        const { error } = await supabase
+          .from("users")
+          .update([
+            {
+              phone,
+              name,
+              img: avatarURL,
+            },
+          ])
+          .eq("id", userInfo?.id);
+        if (error)
+          return toast({
+            variant: "destructive",
+            description: "an error occurred trying to update profile",
+          });
+        toast({
+          description: "Profile updated",
         });
-      toast({
-        description: "Profile updated",
-      });
-      return router.refresh();
+        return router.refresh();
+      }
     } catch (error) {
       console.log(error);
     } finally {
-      setEditProfileLoading(false);
+      setEditLoading(false);
     }
   }
 
@@ -226,25 +248,26 @@ export default function Navbar() {
                       />
                     </div>
                     <div className="flex flex-col mb-4 gap-1.5">
-                      <Label>Email</Label>
+                      <Label>Phone</Label>
                       <Input
-                        name="email"
-                        id="email"
-                        defaultValue={userInfo?.email}
+                        name="phone"
+                        id="phone"
+                        defaultValue={userInfo?.phone}
+                        type="tel"
                       />
                     </div>
-                    {avatar?.file && (
-                      <Button
-                        type="submit"
-                        size={"sm"}
-                        className="bg-green-700 w-full text-white"
-                      >
-                        Update
-                        {editProFileLoading ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : null}
-                      </Button>
-                    )}
+
+                    <Button
+                      type="submit"
+                      size={"sm"}
+                      disabled={editLoading}
+                      className="bg-green-700 w-full text-white"
+                    >
+                      Update
+                      {editLoading ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : null}
+                    </Button>
                   </form>
                 </DialogContent>
               </Dialog>

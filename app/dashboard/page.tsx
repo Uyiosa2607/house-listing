@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useStore } from "@/utils/store";
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -59,9 +59,10 @@ type Listing = {
 };
 
 export default function UserDashboard() {
-  const [editingListing, setEditingListing] = useState<Listing | null>(null);
+  const [editLoading, setEditLoading] = useState<boolean>(false);
   const [listings, setListings] = useState<Listing[]>([]);
   const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
+  const [status, setStatus] = useState<string>("available");
 
   const { fetchUser, userInfo, loading } = useStore();
 
@@ -86,18 +87,54 @@ export default function UserDashboard() {
 
   useEffect(() => {
     fetchUser();
-    // if (userInfo?.role !== "admin") return router.push("/");
     getListing();
   }, [fetchUser]);
 
-  const handleEditListing = (updatedListing: Listing) => {
-    setListings(
-      listings.map((listing) =>
-        listing.id === updatedListing.id ? updatedListing : listing
-      )
-    );
-    setEditingListing(null);
-  };
+  async function handleEditListing(
+    event: React.FormEvent<HTMLFormElement>,
+    id: string
+  ) {
+    event.preventDefault();
+    const supabase = createClient();
+    const formData = new FormData(event.currentTarget);
+    const title = formData.get("title") as string;
+    const bathrooms = Number(formData.get("bathrooms"));
+    const bedrooms = Number(formData.get("bedrooms"));
+    const price = Number(formData.get("price"));
+    const description = formData.get("description") as string;
+    const location = formData.get("location") as string;
+
+    try {
+      setEditLoading(true);
+      const { error } = await supabase
+        .from("listing")
+        .update([
+          {
+            title,
+            status,
+            bedrooms,
+            bathrooms,
+            price,
+            description,
+            location,
+          },
+        ])
+        .eq("id", id);
+
+      if (error)
+        return toast({
+          variant: "destructive",
+          description: "unable to edit listing please refresh page try again",
+        });
+      return toast({
+        description: "Listing details updated",
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setEditLoading(false);
+    }
+  }
 
   async function handleLogout() {
     const supabase = createClient();
@@ -230,20 +267,16 @@ export default function UserDashboard() {
                           required
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          name="email"
-                          type="email"
-                          defaultValue={userInfo?.email}
-                          required
-                        />
-                      </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="phone">Phone</Label>
-                        <Input id="phone" name="phone" type="tel" required />
+                        <Input
+                          defaultValue={userInfo?.phone}
+                          id="phone"
+                          name="phone"
+                          type="tel"
+                          required
+                        />
                       </div>
                     </div>
                     <DialogFooter className="mt-4">
@@ -299,11 +332,7 @@ export default function UserDashboard() {
                       <CardFooter className="flex p-2 mt-4 justify-end space-x-2">
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button
-                              size={"sm"}
-                              variant="outline"
-                              onClick={() => setEditingListing(listing)}
-                            >
+                            <Button size={"sm"} variant="outline">
                               <Pencil className="w-4 h-4 mr-2" /> Edit
                             </Button>
                           </DialogTrigger>
@@ -312,28 +341,9 @@ export default function UserDashboard() {
                               <DialogTitle>Edit Listing</DialogTitle>
                             </DialogHeader>
                             <form
-                              onSubmit={(e) => {
-                                e.preventDefault();
-                                const formData = new FormData(e.currentTarget);
-                                if (editingListing) {
-                                  handleEditListing({
-                                    ...editingListing,
-                                    title: formData.get("title") as string,
-                                    status: formData.get("status") as
-                                      | "available"
-                                      | "rented"
-                                      | "sold",
-                                    price: Number(formData.get("price")),
-                                    description: formData.get(
-                                      "description"
-                                    ) as string,
-                                    bedrooms: Number(formData.get("bedrooms")),
-                                    bathrooms: Number(
-                                      formData.get("bathrooms")
-                                    ),
-                                  });
-                                }
-                              }}
+                              onSubmit={(event) =>
+                                handleEditListing(event, listing?.id)
+                              }
                             >
                               <div className="space-y-4">
                                 <div className="space-y-2">
@@ -341,7 +351,7 @@ export default function UserDashboard() {
                                   <Input
                                     id="title"
                                     name="title"
-                                    defaultValue={editingListing?.title}
+                                    defaultValue={listing?.title}
                                     required
                                   />
                                 </div>
@@ -349,7 +359,8 @@ export default function UserDashboard() {
                                   <Label htmlFor="status">Status</Label>
                                   <Select
                                     name="status"
-                                    defaultValue={editingListing?.status}
+                                    defaultValue={listing?.status}
+                                    onValueChange={(value) => setStatus(value)}
                                   >
                                     <SelectTrigger className="w-full">
                                       <SelectValue placeholder="Select status" />
@@ -371,7 +382,7 @@ export default function UserDashboard() {
                                     id="price"
                                     name="price"
                                     type="number"
-                                    defaultValue={editingListing?.price}
+                                    defaultValue={listing?.price}
                                     required
                                   />
                                 </div>
@@ -382,7 +393,7 @@ export default function UserDashboard() {
                                   <Textarea
                                     id="description"
                                     name="description"
-                                    defaultValue={editingListing?.description}
+                                    defaultValue={listing?.description}
                                     required
                                   />
                                 </div>
@@ -393,7 +404,7 @@ export default function UserDashboard() {
                                       id="bedrooms"
                                       name="bedrooms"
                                       type="number"
-                                      defaultValue={editingListing?.bedrooms}
+                                      defaultValue={listing?.bedrooms}
                                       required
                                     />
                                   </div>
@@ -403,14 +414,19 @@ export default function UserDashboard() {
                                       id="bathrooms"
                                       name="bathrooms"
                                       type="number"
-                                      defaultValue={editingListing?.bathrooms}
+                                      defaultValue={listing?.bathrooms}
                                       required
                                     />
                                   </div>
                                 </div>
                               </div>
                               <DialogFooter className="mt-4">
-                                <Button type="submit">Save changes</Button>
+                                <Button disabled={editLoading} type="submit">
+                                  Save changes
+                                  {editLoading ? (
+                                    <Loader2 className="w-4 h-4 animate-spin ml-1" />
+                                  ) : null}
+                                </Button>
                               </DialogFooter>
                             </form>
                           </DialogContent>

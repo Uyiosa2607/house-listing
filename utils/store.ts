@@ -7,6 +7,7 @@ type User = {
   id: string;
   img: string | null;
   role: string;
+  phone: string;
 };
 
 interface useStore {
