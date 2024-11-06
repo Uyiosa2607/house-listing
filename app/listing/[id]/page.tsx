@@ -254,7 +254,11 @@ export default function ListingDetails({
           </CardHeader>
           <CardContent className="flex py-2 gap-2 items-center">
             <img
-              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${author?.img}`}
+              src={`${
+                process.env.NEXT_PUBLIC_SUPABASE_URL
+              }/storage/v1/object/public/storage/${
+                author?.img
+              }?${Date.now().toString()}`}
               alt={author?.name}
               className="w-12 h-12 rounded-full object-cover"
             />
