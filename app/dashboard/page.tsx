@@ -219,7 +219,11 @@ export default function UserDashboard() {
               <div className="flex items-center space-x-4">
                 <Avatar className="w-16 h-16">
                   <AvatarImage
-                    src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${userInfo?.img}`}
+                    src={`${
+                      process.env.NEXT_PUBLIC_SUPABASE_URL
+                    }/storage/v1/object/public/storage/${
+                      userInfo?.img
+                    }?${Date.now().toString()}`}
                   />
                   <AvatarFallback>
                     {userInfo?.name

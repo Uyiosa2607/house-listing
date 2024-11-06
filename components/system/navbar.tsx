@@ -166,7 +166,11 @@ export default function Navbar() {
                 <img
                   className="w-9 h-9 object-cover rounded-full"
                   alt={userInfo?.name}
-                  src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${userInfo?.img}`}
+                  src={`${
+                    process.env.NEXT_PUBLIC_SUPABASE_URL
+                  }/storage/v1/object/public/storage/${
+                    userInfo?.img
+                  }?${Date.now().toString()}`}
                 />
               )}
             </>
@@ -195,7 +199,11 @@ export default function Navbar() {
                       <img
                         className="w-20 h-20 object-cover rounded-full"
                         alt={userInfo?.name}
-                        src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${userInfo?.img}`}
+                        src={`${
+                          process.env.NEXT_PUBLIC_SUPABASE_URL
+                        }/storage/v1/object/public/storage/${
+                          userInfo?.img
+                        }?${Date.now().toString()}`}
                       />
                     )}
                   </>
