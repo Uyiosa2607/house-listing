@@ -277,9 +277,11 @@ export default function ListingDetails({
           <CardFooter className="p-2 pb-6">
             <Button
               className="bg-green-700 text-white"
-              onClick={() => window.open(`mailto:${author?.email}`, "_blank")}
+              onClick={() =>
+                window.open(`https://wa.me/${author?.phone}`, "_blank")
+              }
             >
-              contact agent
+              Contact Agent
             </Button>
           </CardFooter>
         </Card>
