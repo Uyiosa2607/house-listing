@@ -24,6 +24,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader,
+  CircleUser,
 } from "lucide-react";
 import {
   Dialog,
@@ -73,8 +74,6 @@ export default function ListingDetails({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [listing, setListing] = useState<Listing | null>(null);
   const [author, setAuthor] = useState<Author | null>(null);
-
-  // const [imageOpen, setImageOPen] = useState<boolean>(false)
 
   async function getRealtor(id: string) {
     const supabase = createClient();
@@ -260,16 +259,19 @@ export default function ListingDetails({
                 author?.img
               }?${Date.now().toString()}`}
               alt={author?.name}
-              className="w-12 h-12 rounded-full object-cover"
+              className="w-16 h-16 rounded-full object-cover"
             />
-            <div className="mt-3">
-              <h3 className="font-semibold text-sm">{author?.name}</h3>
-              <p className="flex text-xs items-center mt-1">
-                <Phone className="h-2 w-2 text-sm mr-1" />
+            <div className="mt-1">
+              <div className="flex items-center gap-1">
+                <CircleUser className="w-3 h-3 text-sm" />{" "}
+                <h3 className="text-medium text-sm">{author?.name}</h3>
+              </div>
+              <p className="flex text-xs items-center">
+                <Phone className="h-3 w-3 text-sm mr-1" />
                 {author?.phone}
               </p>
-              <div className="flex items-center mt-1">
-                <Mail className="h-2 w-2 mr-1" />
+              <div className="flex items-center">
+                <Mail className="h-3 w-3 mr-1" />
                 <span className="text-sm">{author?.email}</span>
               </div>
             </div>
