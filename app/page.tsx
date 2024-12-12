@@ -19,10 +19,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Bed, Bath, DollarSign, Search, Loader } from "lucide-react";
+import {
+  Bed,
+  Bath,
+  DollarSign,
+  Search,
+  Loader,
+  MapPin,
+  ChevronRight,
+  UserPlus,
+} from "lucide-react";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import Navbar from "@/components/system/navbar";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+
+import { Eye, EyeOff } from "lucide-react";
+// import { Button } from "@/components/ui/button"
+// import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label";
+// import Link from 'next/link'
 
 type Listing = {
   id: string;
@@ -46,11 +62,19 @@ export default function Home() {
   const [fetchLoading, setFetchLoading] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const filteredListings = listings.filter(
-    (listing) =>
-      listing.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (priceFilter === "" || listing.price <= parseInt(priceFilter))
-  );
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    // Handle login logic here
+    console.log("Login submitted");
+
+    const filteredListings = listings.filter(
+      (listing) =>
+        listing.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        (priceFilter === "" || listing.price <= parseInt(priceFilter))
+    );
+  };
 
   async function getListing() {
     const supabase = createClient();
@@ -84,107 +108,190 @@ export default function Home() {
     );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-4">
-      <Navbar />
-      <div className="max-w-6xl mx-auto space-y-8">
-        <h1 className="text-lg pt-4 font-semibold text-center">
-          Available Listings
-        </h1>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-grow">
-            <Search className="absolute left-2 top-3 h-4 w-4 text-gray-500" />
-            <Input
-              type="text"
-              placeholder="Search listings..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8"
-            />
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      {/* Header */}
+      <header className="bg-indigo-600 text-white">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/" className="text-2xl font-bold">
+            DreamHome
+          </Link>
+          <div className="flex items-center space-x-4">
+            <div className="hidden md:flex items-center space-x-2 bg-indigo-700 rounded-full px-3 py-1">
+              <Input
+                type="search"
+                placeholder="Search for houses..."
+                className="bg-transparent border-none text-white placeholder-indigo-300 focus:outline-none"
+              />
+              <Search className="h-5 w-5 text-indigo-300" />
+            </div>
+            <Link href="/login">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-white hover:bg-indigo-500"
+              >
+                Login
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-white hover:bg-indigo-500"
+              >
+                <UserPlus className="h-4 w-4 mr-1" />
+                Register
+              </Button>
+            </Link>
           </div>
-          <Select value={priceFilter} onValueChange={setPriceFilter}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Price range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="any">Any price</SelectItem>
-              <SelectItem value="1000">Up to $1000</SelectItem>
-              <SelectItem value="2000">Up to $2000</SelectItem>
-              <SelectItem value="3000">Up to $3000</SelectItem>
-              <SelectItem value="4000">Up to $4000</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {fetchLoading ? (
-            <Card className="flex flex-col">
-              <Skeleton className="h-48 w-full object-cover" />
-              <CardHeader>
-                <Skeleton className="h-5" />
-                <CardDescription></CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-5 w-[70%]" />
-                <div className="flex justify-between items-center mt-4">
-                  <div className="flex items-center"></div>
-                  <div className="flex items-center"></div>
-                  <div className="flex items-center"></div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 container mx-auto px-4 py-8">
+        {/* Property Types */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4 text-slate-800">
+            Property Types
+          </h2>
+          <div className="flex flex-wrap gap-4">
+            {["Houses", "Apartments", "Villas", "Mansions", "Studios"].map(
+              (type) => (
+                <Button
+                  key={type}
+                  variant="outline"
+                  className="border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                >
+                  {type}
+                </Button>
+              )
+            )}
+          </div>
+        </div>
+
+        {/* Featured Listings */}
+        <div>
+          <h2 className="text-2xl font-bold mb-4 text-slate-800">
+            Featured Listings
+          </h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div
+                key={i}
+                className="bg-white rounded-lg shadow-md overflow-hidden border border-slate-200"
+              >
+                <div className="relative">
+                  <img
+                    src={`/placeholder.svg?height=200&width=400&text=House+${i}`}
+                    alt={`House ${i}`}
+                    className="w-full h-48 object-cover"
+                  />
+                  <div className="absolute top-2 right-2 bg-coral-500 text-white px-2 py-1 rounded-full text-sm font-semibold">
+                    New Listing
+                  </div>
                 </div>
-              </CardContent>
-              <CardFooter className="mt-auto">
-                <Skeleton className="h-8" />
-              </CardFooter>
-            </Card>
-          ) : (
-            <>
-              {filteredListings.map((listing) => (
-                <Link href={`/listing/${listing.id}`} key={listing.id}>
-                  <Card key={listing.id} className="flex flex-col">
-                    <img
-                      src={`${process.env
-                        .NEXT_PUBLIC_SUPABASE_URL!}/storage/v1/object/public/storage/${
-                        listing.img[0]
-                      }`}
-                      alt={listing.title}
-                      className="h-48 w-full object-cover"
-                    />
-                    <CardHeader className="p-2 pt-0">
-                      <CardTitle className="text-base">
-                        {listing.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-2 pt-0">
-                      <p className="text-sm text-gray-500 line-clamp-2">
-                        {listing.description}
-                      </p>
-                      <div className="flex justify-between items-center mt-4">
-                        <div className="flex items-center">
-                          <Bed className="h-4 w-4 mr-1" />
-                          <span className="text-sm">{listing.bedrooms}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Bath className="h-4 w-4 mr-1" />
-                          <span className="text-sm">{listing.bathrooms}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <DollarSign className="h-4 w-4 mr-1" />
-                          <span className="text-sm font-bold">
-                            {listing.price}/Yr
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                    <CardFooter className="mt-auto p-2">
-                      <Button size={"sm"} className="w-full">
+                <div className="p-4">
+                  <h3 className="font-semibold text-lg text-slate-800">
+                    Beautiful House {i}
+                  </h3>
+                  <div className="flex items-center text-slate-600 mt-1">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    <p>123 Main St, City</p>
+                  </div>
+                  <div className="mt-4 flex justify-between items-center">
+                    <span className="text-2xl font-bold text-indigo-600">
+                      $1,234,000
+                    </span>
+                    <Link href={`/listing/${i}`}>
+                      <Button className="bg-coral-500 hover:bg-coral-600 text-white">
                         View Details
                       </Button>
-                    </CardFooter>
-                  </Card>
-                </Link>
-              ))}
-            </>
-          )}
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 text-center">
+            <Link href="/listings">
+              <Button
+                variant="outline"
+                className="text-indigo-600 hover:bg-indigo-50"
+              >
+                View All Listings <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
-      </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-slate-800 text-white py-8">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">About Us</h3>
+              <p className="text-slate-300">
+                DreamHome is your trusted partner in finding the perfect
+                property. With our extensive listings and expert agents, your
+                dream home is just a click away.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link
+                    href="/about"
+                    className="text-slate-300 hover:text-white"
+                  >
+                    About
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/contact"
+                    className="text-slate-300 hover:text-white"
+                  >
+                    Contact
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/terms"
+                    className="text-slate-300 hover:text-white"
+                  >
+                    Terms of Service
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/privacy"
+                    className="text-slate-300 hover:text-white"
+                  >
+                    Privacy Policy
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
+              <p className="text-slate-300">
+                1234 Real Estate Ave
+                <br />
+                Cityville, State 12345
+                <br />
+                Phone: (123) 456-7890
+                <br />
+                Email: info@dreamhome.com
+              </p>
+            </div>
+          </div>
+          <div className="mt-8 pt-8 border-t border-slate-700 text-center text-slate-300">
+            <p>&copy; 2023 DreamHome. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

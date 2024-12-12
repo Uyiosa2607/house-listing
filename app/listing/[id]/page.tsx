@@ -32,6 +32,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import Link from "next/link";
+
+import { Square, Heart, Share2 } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
 
 interface Listing {
   id: string;
@@ -72,7 +77,7 @@ export default function ListingDetails({
   const router = useRouter();
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [listing, setListing] = useState<Listing | null>(null);
+  // const [listing, setListing] = useState<Listing | null>(null);
   const [author, setAuthor] = useState<Author | null>(null);
 
   async function getRealtor(id: string) {
@@ -128,166 +133,151 @@ export default function ListingDetails({
     }
   };
 
-  if (!listing) {
-    return (
-      <main className="min-w-screen min-h-screen flex items-center justify-center">
-        <Loader className="w-7 h-7 animate-spin" />
-      </main>
-    );
-  }
+  // if (!listing) {
+  //   return (
+  //     <main className="min-w-screen min-h-screen flex items-center justify-center">
+  //       <Loader className="w-7 h-7 animate-spin" />
+  //     </main>
+  //   );
+  // }
+
+  const listing = {
+    id: params.id,
+    title: "Spacious Family Home",
+    address: "123 Main St, Anytown, USA",
+    price: 1234000,
+    bedrooms: 4,
+    bathrooms: 3,
+    area: 2500,
+    description:
+      "This beautiful family home features an open floor plan, gourmet kitchen, and a large backyard perfect for entertaining. Recent upgrades include new hardwood floors and a state-of-the-art HVAC system.",
+    images: [
+      "/placeholder.svg?height=600&width=800&text=House+Image+1",
+      "/placeholder.svg?height=600&width=800&text=House+Image+2",
+      "/placeholder.svg?height=600&width=800&text=House+Image+3",
+    ],
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 p-4">
-      <div className="max-w-4xl mx-auto space-y-4">
-        <div className="flex pt-3 items-center justify-between">
-          <p
-            onClick={() => router.back()}
-            className="flex text-sm flex-1 items-center text-blue-500 hover:underline cursor-pointer"
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <header className="bg-indigo-600 text-white">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-indigo-500"
+            >
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+          </Link>
+          <h1 className="text-2xl font-bold">Listing Details</h1>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white hover:bg-indigo-500"
           >
-            <ArrowLeft className="h-4 text-base font-semibold w-4 mr-2" />
-            Back to Listings
-          </p>
-          <h1 className="text-sm w-[80%] justify-end pr-1 flex truncate capitalize font-medium flex-1 text-center">
-            {listing.title}
-          </h1>
+            <Share2 className="h-6 w-6" />
+          </Button>
         </div>
+      </header>
 
-        <Dialog>
-          <div className="relative mx-auto">
-            <DialogTrigger asChild>
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Left Column - Images */}
+          <div>
+            <div className="relative h-96 bg-slate-300 rounded-lg overflow-hidden">
               <img
-                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${listing.img[currentImageIndex]}`}
-                alt={`Listing image ${currentImageIndex + 1}`}
-                className="min-w-full  h-auto object-cover rounded-lg"
+                src={listing.images[0]}
+                alt={listing.title}
+                className="w-full h-full object-cover"
               />
-            </DialogTrigger>
-
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute left-2 top-1/2 transform -translate-y-1/2"
-              onClick={prevImage}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2"
-              onClick={nextImage}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
-              {currentImageIndex + 1} / {listing.img.length}
+              <Badge className="absolute bottom-2 right-2 bg-slate-800 bg-opacity-75">
+                1 / {listing.images.length}
+              </Badge>
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-4">
+              {listing.images.slice(1).map((image, index) => (
+                <div
+                  key={index}
+                  className="h-24 bg-slate-300 rounded-lg overflow-hidden"
+                >
+                  <img
+                    src={image}
+                    alt={`${listing.title} - Image ${index + 2}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
             </div>
           </div>
-          <DialogContent className="p-2">
-            <DialogTitle></DialogTitle>
-            <img
-              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/storage/${listing.img[currentImageIndex]}`}
-              alt={`Listing image ${currentImageIndex + 1}`}
-              className="w-full h-auto object-contain"
-            />
-          </DialogContent>
-        </Dialog>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-          <Card className="p-2">
-            <CardHeader className="flex p-2 flex-row items-center justify-center pb-2">
-              <Bed className="h-4 w-4 mr-2" />
-              <CardTitle>{listing.bedrooms}</CardTitle>
-            </CardHeader>
-            <CardDescription>Bedrooms</CardDescription>
-          </Card>
-          <Card className="p-2">
-            <CardHeader className="flex p-2 flex-row items-center justify-center pb-2">
-              <Bath className="h-4 w-4 mr-2" />
-              <CardTitle>{listing.bathrooms}</CardTitle>
-            </CardHeader>
-            <CardDescription>Bathrooms</CardDescription>
-          </Card>
+          {/* Right Column - Details */}
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-3xl font-bold text-slate-800">
+                {listing.title}
+              </h2>
+              <p className="text-xl text-slate-600">{listing.address}</p>
+            </div>
 
-          <Card className="p-2">
-            <CardHeader className="flex flex-row p-2 items-center justify-center pb-2">
-              <DollarSign className="h-4 w-4 mr-2" />
-              <CardTitle>{listing.price}</CardTitle>
-            </CardHeader>
-            <CardDescription>Per Month</CardDescription>
-          </Card>
-        </div>
+            <div className="flex justify-between items-center">
+              <span className="text-4xl font-bold text-indigo-600">
+                ${listing.price.toLocaleString()}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="text-coral-500 hover:text-coral-600 hover:bg-coral-50"
+              >
+                <Heart className="h-6 w-6" />
+              </Button>
+            </div>
 
-        <Tabs defaultValue="description">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="description">Description</TabsTrigger>
-            <TabsTrigger value="location">Location</TabsTrigger>
-          </TabsList>
-          <TabsContent value="description" className="mt-2">
-            <Card className="p-2">
-              <CardHeader className="p-2">
-                <CardTitle className="text-base font-semibold">
-                  About this property
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-2">
-                <p className="text-sm">{listing.description}</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="location" className="mt-2">
-            <Card>
-              <CardHeader className="p-2">
-                <CardTitle className="text-base">Location</CardTitle>
-              </CardHeader>
-              <CardContent className="flex items-center">
-                <MapPin className="h-3 w-3 mr-2 flex-shrink-0" />
-                <p className="text-sm">{listing.location}</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        <Card>
-          <CardHeader className="p-3">
-            <CardTitle className="text-base">Contact Realtor</CardTitle>
-          </CardHeader>
-          <CardContent className="flex py-2 gap-2 items-center">
-            <img
-              src={`${
-                process.env.NEXT_PUBLIC_SUPABASE_URL
-              }/storage/v1/object/public/storage/${
-                author?.img
-              }?${Date.now().toString()}`}
-              alt={author?.name}
-              className="w-16 h-16 rounded-full object-cover"
-            />
-            <div className="mt-1">
-              <div className="flex items-center gap-1">
-                <CircleUser className="w-3 h-3 text-sm" />{" "}
-                <h3 className="text-medium text-sm">{author?.name}</h3>
-              </div>
-              <p className="flex text-xs items-center">
-                <Phone className="h-3 w-3 text-sm mr-1" />
-                {author?.phone}
-              </p>
+            <div className="flex justify-between text-slate-600">
               <div className="flex items-center">
-                <Mail className="h-3 w-3 mr-1" />
-                <span className="text-sm">{author?.email}</span>
+                <Bed className="h-6 w-6 mr-2" />
+                <span>{listing.bedrooms} Beds</span>
+              </div>
+              <div className="flex items-center">
+                <Bath className="h-6 w-6 mr-2" />
+                <span>{listing.bathrooms} Baths</span>
+              </div>
+              <div className="flex items-center">
+                <Square className="h-6 w-6 mr-2" />
+                <span>{listing.area} sqft</span>
               </div>
             </div>
-          </CardContent>
-          <CardFooter className="p-2 pb-6">
-            <Button
-              className="bg-green-700 text-white"
-              onClick={() =>
-                window.open(`https://wa.me/${author?.phone}`, "_blank")
-              }
-            >
-              Contact Agent
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
+
+            <div>
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                Description
+              </h3>
+              <p className="text-slate-600">{listing.description}</p>
+            </div>
+
+            <div className="flex space-x-4">
+              <Button className="flex-1 bg-coral-500 hover:bg-coral-600 text-white">
+                Contact Agent
+              </Button>
+              <Button className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white">
+                Schedule a Tour
+              </Button>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                Location
+              </h3>
+              <div className="h-64 bg-slate-300 rounded-lg flex items-center justify-center">
+                <MapPin className="h-12 w-12 text-slate-400" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
