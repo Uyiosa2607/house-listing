@@ -3,11 +3,19 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Search, Loader, MapPin } from "lucide-react";
 import Link from "next/link";
 
-type Listing = {
+interface User {
+  name: string;
+  isAdmin: boolean;
+  email: string;
+  phone: string;
+  id: string;
+  img: string;
+}
+
+interface Listing {
   id: string;
   title: string;
   price: number;
@@ -20,7 +28,7 @@ type Listing = {
     id: string;
     name: string;
   };
-};
+}
 
 export default function Home() {
   // const [searchTerm, setSearchTerm] = useState("");
@@ -28,6 +36,7 @@ export default function Home() {
   const [listings, setListings] = useState<Listing[]>([]);
   // const [fetchLoading, setFetchLoading] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<User | null>(null);
 
   // const filteredListings = listings.filter(
   //   (listing) =>
@@ -55,7 +64,26 @@ export default function Home() {
     }
   }
 
+  async function getUser() {
+    const supabase = createClient();
+    const id = (await supabase.auth.getUser()).data.user?.id;
+    console.log(id);
+    try {
+      const { error, data } = await supabase
+        .from("users")
+        .select()
+        .eq("id", id)
+        .single();
+      if (!error) {
+        return setUser(data);
+      }
+    } catch (error) {
+      return console.log(error);
+    }
+  }
+
   useEffect(() => {
+    getUser();
     getListing();
   }, []);
 
@@ -71,8 +99,16 @@ export default function Home() {
       {/* Header */}
       <header className="bg-indigo-600 z-50 text-white sticky top-0 left-0">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-lg font-semibold">
-            DreamHome
+          <Link href="/profile" className="text-lg font-semibold">
+            <img
+              className="w-10 h-10 rounded-full object-cover"
+              src={`${
+                process.env.NEXT_PUBLIC_SUPABASE_URL
+              }/storage/v1/object/public/storage/${
+                user?.img
+              }?${Date.now().toString()}`}
+              alt="profile photo"
+            />
           </Link>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 bg-indigo-700 rounded-full px-2 py-1">
@@ -143,11 +179,11 @@ export default function Home() {
                       <span className="text-xl font-bold text-indigo-600">
                         ${listing?.price}
                       </span>
-                      <Link href={`/listing/r74`}>
+                      {/* <Link href={`/listing/r74`}>
                         <Button className="bg-coral-500 hover:bg-coral-600 text-white">
                           View Details
                         </Button>
-                      </Link>
+                      </Link> */}
                     </div>
                   </div>
                 </Link>
