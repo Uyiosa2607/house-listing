@@ -147,8 +147,8 @@ export default function Home() {
 
         {/* Featured Listings */}
         <div>
-          <h2 className="text-lg font-semibold mb-4 text-slate-800">
-            Available listing
+          <h2 className="text-lg capitalize font-semibold mb-4 text-slate-800">
+            available listing
           </h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {listings.map((listing) => (
